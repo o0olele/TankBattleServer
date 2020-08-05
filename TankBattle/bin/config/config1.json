@@ -1,0 +1,17 @@
+{
+    "global":{
+
+    },
+    "logic":{
+        "listen":":8081",
+        "db":"localhost:6379",
+        "log":"./log/log_logic1.log"
+
+    },
+    "room":{
+
+    },
+    "rcenter":{
+        
+    }
+}
