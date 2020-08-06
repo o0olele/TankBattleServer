@@ -11,7 +11,6 @@ import (
 
 type LogicServer struct {
 	gonet.Service
-	test bool
 }
 
 var mServer *LogicServer

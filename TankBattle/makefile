@@ -1,4 +1,4 @@
-APPS = logicserver  rcenterserver
+APPS = logicserver rcenterserver roomserver
 
 BASE = /home/lele/go
 

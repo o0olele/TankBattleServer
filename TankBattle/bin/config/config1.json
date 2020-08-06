@@ -10,7 +10,9 @@
 
     },
     "room":{
-
+        "port":"8090",
+        "log":"./log/log_room1.log",
+        "grpc":":6001"
     },
     "rcenter":{
         "log":"./log/log_rcenter1.log",
