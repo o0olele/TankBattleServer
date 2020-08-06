@@ -1,0 +1,19 @@
+{
+    "global":{
+
+    },
+    "logic":{
+        "listen":":8081",
+        "db":"localhost:6379",
+        "log":"./log/log_logic2.log",
+        "grpc":"localhost:6001"
+
+    },
+    "room":{
+
+    },
+    "rcenter":{
+        "log":"./log/log_rcenter2.log",
+        "grpc":":6001"
+    }
+}

@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package proto;
+
+message ConnectRoomInfo {
+    fixed32 ip = 1;
+    uint32 port = 2;
+}
+
+message LogicResponse {
+    ConnectRoomInfo mInfo = 1;
+}
+
+message LogicRequest {
+    string Token = 1;
+}
+
+service StreamLogicService {
+    rpc Route(stream LogicRequest) returns (stream LogicResponse) {};
+}
