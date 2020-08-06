@@ -1,6 +1,6 @@
-APPS = logicserver
+APPS = logicserver  rcenterserver
 
-BASE = $(PWD)
+BASE = /home/lele/go
 
 BUILDVER = '0.1'
 BUILDDATE = 'date +%F'
@@ -8,7 +8,7 @@ BUILDDATE = 'date +%F'
 all: install
 
 install: 
-	export GOPATH=$(PWD)\
+	export GOPATH=$(PWD):$(BASE)\
 	&& for ser in $(APPS);\
 	do \
 		go install -x $$ser;\

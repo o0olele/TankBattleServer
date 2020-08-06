@@ -3,15 +3,17 @@
 
     },
     "logic":{
-        "listen":":8081",
+        "listen":":8080",
         "db":"localhost:6379",
-        "log":"./log/log_logic1.log"
+        "log":"./log/log_logic1.log",
+        "grpc":"localhost:6001"
 
     },
     "room":{
 
     },
     "rcenter":{
-        
+        "log":"./log/log_rcenter1.log",
+        "grpc":":6001"
     }
 }
