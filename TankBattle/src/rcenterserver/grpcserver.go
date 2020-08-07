@@ -2,6 +2,7 @@ package main
 
 import (
 	"base/env"
+	"context"
 	"encoding/json"
 	"fmt"
 	proto "grpc"
@@ -15,29 +16,14 @@ import (
 type LogicService struct {
 }
 
-func (this *LogicService) Route(conn proto.StreamLogicService_RouteServer) error {
-	for {
-		stream, err := conn.Recv()
-		if io.EOF == err {
-			glog.Info("[gRPC] Server Got EOF")
-			return nil
-		}
+func (this *LogicService) Route(ctx context.Context, request *proto.LogicRequest) (*proto.LogicResponse, error) {
 
-		if nil != err {
-			glog.Error("[gRPC] Server Error ", err)
-			return err
-		}
-
-		glog.Info("[gRPC] Server Recv: ", stream.Token)
-
-		conn.Send(&proto.LogicResponse{
-			MInfo: &proto.ConnectRoomInfo{
-				Ip:   1,
-				Port: 65,
-			},
-		})
+	info := proto.ConnectRoomInfo{
+		Ip:   0,
+		Port: 52,
 	}
-
+	res := proto.LogicResponse{MInfo: &info}
+	return &res, nil
 }
 
 type RoomService struct {

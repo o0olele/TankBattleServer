@@ -29,11 +29,6 @@ func (this *LogicServer) Init() bool {
 		return false
 	}
 
-	if !LogicGrpcClient_GetMe().Init() {
-		glog.Error("[gRPC] Client Init Fail")
-		return false
-	}
-
 	return true
 }
 
@@ -46,7 +41,6 @@ func (this *LogicServer) MainLoop() {
 }
 
 func (this *LogicServer) Final() bool {
-	LogicGrpcClient_GetMe().Close()
 	return true
 }
 

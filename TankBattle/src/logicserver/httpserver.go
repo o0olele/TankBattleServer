@@ -73,7 +73,7 @@ func EchoAllHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, s+"\n")
 		}
 
-		LogicGrpcClient_GetMe().Send("123456789")
+		GetVailabelRoomInfo("123456789")
 
 	}
 

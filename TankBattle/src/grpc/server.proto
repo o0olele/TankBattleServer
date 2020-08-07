@@ -16,7 +16,7 @@ message LogicRequest {
 }
 
 service StreamLogicService {
-    rpc Route(stream LogicRequest) returns (stream LogicResponse) {};
+    rpc Route(LogicRequest) returns (LogicResponse) {};
 }
 
 enum MsgType {
