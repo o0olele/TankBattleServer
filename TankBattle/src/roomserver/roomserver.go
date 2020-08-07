@@ -42,7 +42,7 @@ func (this *RoomServer) MainLoop() {
 }
 
 func (this *RoomServer) Final() bool {
-
+	RoomGrpcClient_GetMe().Close()
 	return true
 }
 

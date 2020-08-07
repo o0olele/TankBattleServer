@@ -35,6 +35,16 @@ func (this *RoomGrpcClient) Init() bool {
 		return false
 	}
 
+	if !this.InitClient() {
+		glog.Error("[gRPC] Init Client Fail")
+		return false
+	}
+
+	return this.SendRegist()
+}
+
+func (this *RoomGrpcClient) InitClient() bool {
+	var err error
 	client := proto.NewStreamRoomServiceClient(this.conn)
 
 	this.mRouteClient, err = client.Route(context.Background())
@@ -43,7 +53,7 @@ func (this *RoomGrpcClient) Init() bool {
 		return false
 	}
 
-	return this.SendRegist()
+	return true
 }
 
 func (this *RoomGrpcClient) SendRegist() bool {

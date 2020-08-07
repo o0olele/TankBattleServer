@@ -1,6 +1,6 @@
 APPS = logicserver rcenterserver roomserver
 
-BASE = /home/lele/go
+BASE = $(PWD)/../TankBattleBase
 
 BUILDVER = '0.1'
 BUILDDATE = 'date +%F'
@@ -16,8 +16,3 @@ install:
 			exit 1;\
 		fi;\
 	done
-
-
-logicserver:
-	export GOPATH=$(PWD)\
-	go install -x logicserver
