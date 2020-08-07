@@ -28,8 +28,10 @@ stop)
     stopwork
 ;;
 start)
+    startwork
+;;
+*)
     stopwork
     sleep 1s
     startwork
-;;
 esac
