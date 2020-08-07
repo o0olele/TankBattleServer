@@ -59,7 +59,7 @@ func main() {
 	if "" != *logfile {
 		glog.SetLogFile(*logfile)
 	} else {
-		glog.SetLogFile(env.Get("logic", "log"))
+		glog.SetLogFile(env.Get("room", "log"))
 	}
 	defer glog.Flush()
 
