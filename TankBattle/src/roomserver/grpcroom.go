@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	proto "grpc"
+	proto "proto"
 
 	"github.com/golang/glog"
 	"google.golang.org/grpc"

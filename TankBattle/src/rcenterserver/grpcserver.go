@@ -5,9 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	proto "grpc"
 	"io"
 	"net"
+	proto "proto"
 
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
