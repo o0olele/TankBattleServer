@@ -10,10 +10,12 @@ A tankbattle online game
 - `google.golang.org/genproto`
 - `google.golang.org/grpc`
 - `google.golang.org/protobuf`
+- prepare these plugins and move them into `./TankBattleBase/src`
 
 # Start
 
 ~~~shell
+cd TankBattle
 mkdir log
 make
 ./run.sh
