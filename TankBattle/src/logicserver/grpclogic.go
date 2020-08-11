@@ -4,7 +4,7 @@ import (
 	"base/env"
 	"context"
 
-	proto "grpc"
+	proto "proto"
 
 	"github.com/golang/glog"
 	"google.golang.org/grpc"

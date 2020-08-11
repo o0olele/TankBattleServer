@@ -1,6 +1,8 @@
 APPS = logicserver rcenterserver roomserver
+PROTOS = server.proto
 
 BASE = $(PWD)/../TankBattleBase
+PROTOC = /usr/local/bin
 
 BUILDVER = '0.1'
 BUILDDATE = 'date +%F'
@@ -16,3 +18,15 @@ install:
 			exit 1;\
 		fi;\
 	done
+
+proto: 
+	
+	for ser in $(PROTOS);\
+	do \
+		protoc --go_out=plugins=grpc:$(PWD)/src proto/$$ser;\
+		if [ "$$?" != "0" ]; then\
+			exit 1;\
+		fi;\
+	done
+
+ .PHONY : proto
