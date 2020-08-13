@@ -7,17 +7,21 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/gorilla/websocket"
 )
 
 type RoomServer struct {
 	gonet.Service
+	roomser *gonet.WebSocketServer
 }
 
 var mServer *RoomServer
 
 func RoomServer_GetMe() *RoomServer {
 	if nil == mServer {
-		mServer = &RoomServer{}
+		mServer = &RoomServer{
+			roomser: &gonet.WebSocketServer{},
+		}
 		mServer.Derived = mServer
 	}
 
@@ -30,6 +34,12 @@ func (this *RoomServer) Init() bool {
 		glog.Error("[gRPC] Room Client Init Fail")
 		return false
 	}
+
+	err := this.roomser.WSBind(env.Get("room", "listen"))
+	if nil != err {
+		glog.Error("[Start] Bind Port Fail")
+	}
+
 	return true
 }
 
@@ -44,6 +54,10 @@ func (this *RoomServer) MainLoop() {
 func (this *RoomServer) Final() bool {
 	RoomGrpcClient_GetMe().Close()
 	return true
+}
+
+func (this *RoomServer) OnWSAccept(conn *websocket.Conn) {
+	glog.Info("[WS] Connected")
 }
 
 var (

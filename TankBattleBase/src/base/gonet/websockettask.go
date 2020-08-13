@@ -153,6 +153,8 @@ func (this *WebSocketTask) sendloop() {
 		case <-this.stopedChan:
 			return
 		case <-timeout.C:
+			// 使用验证通常是为了防止用户连接而不使用，占据服务器资源
+			// 验证客户端是否合法后可以减少这种情况
 			if !this.IsVerifed() {
 				glog.Error("[WS] Verify Fail ", this.Conn.RemoteAddr())
 				return
