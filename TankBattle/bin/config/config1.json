@@ -6,7 +6,8 @@
         "listen":":8080",
         "db":"localhost:6379",
         "log":"./log/log_logic1.log",
-        "grpc":"localhost:6001"
+        "grpc":"localhost:6001",
+        "redis":":6379"
 
     },
     "room":{
