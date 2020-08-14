@@ -23,6 +23,7 @@ func RoomServer_GetMe() *RoomServer {
 			roomser: &gonet.WebSocketServer{},
 		}
 		mServer.Derived = mServer
+		mServer.roomser.Derived = mServer
 	}
 
 	return mServer
@@ -35,10 +36,12 @@ func (this *RoomServer) Init() bool {
 		return false
 	}
 
-	err := this.roomser.WSBind(env.Get("room", "listen"))
-	if nil != err {
-		glog.Error("[Start] Bind Port Fail")
-	}
+	go func() {
+		err := this.roomser.WSBind(env.Get("room", "listen"))
+		if nil != err {
+			glog.Error("[Start] Bind Port Fail")
+		}
+	}()
 
 	return true
 }
@@ -58,6 +61,7 @@ func (this *RoomServer) Final() bool {
 
 func (this *RoomServer) OnWSAccept(conn *websocket.Conn) {
 	glog.Info("[WS] Connected")
+	NewPlayerTask(conn).Start()
 }
 
 var (

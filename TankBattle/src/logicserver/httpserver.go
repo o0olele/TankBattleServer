@@ -2,10 +2,13 @@ package main
 
 import (
 	"base/env"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
 	"time"
+
+	common "common"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/golang/glog"
@@ -37,26 +40,51 @@ func newPool(server, password string) *redis.Pool {
 	}
 }
 
-func RecordHandler(w http.ResponseWriter, r *http.Request) {
-	values := r.FormValue("text")
-	if values == "" {
-		fmt.Fprintf(w, "try to use \"/echo?text=xxx!\"")
-		return
-	}
+func GetNameHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	fmt.Fprintf(w, values)
+	//w.Header().Set("Content-Type", "application/json")
+	randName := "NickName" + GetDateFormat()
 
-	temp_values := fmt.Sprintf("%s:%s:%s", r.RemoteAddr, GetDateFormat(), values)
+	fmt.Fprintf(w, randName)
+	//json.NewEncoder(w).Encode(randName)
+
+	/*temp_values := fmt.Sprintf("%s:%s:%s", r.RemoteAddr, GetDateFormat(), values)
 
 	if pool != nil {
 		conn := pool.Get()
 		defer conn.Close()
 
 		conn.Do("LPUSH", listkey, temp_values)
-	}
+	}*/
 }
 
-func EchoAllHandler(w http.ResponseWriter, r *http.Request) {
+func GetIDHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	//w.Header().Set("Content-Type", "application/json")
+
+	var msg common.ReqGetIDMsg
+
+	err := json.NewDecoder(r.Body).Decode(&msg)
+	if nil != err {
+		glog.Error("[login] Get id fail")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(&common.RetGetIDMsg{
+		Id: 10001,
+	})
+	if nil != err {
+		glog.Error("[login] Return id fail")
+	}
+
+	GetVailabelRoomInfo("123456789")
+}
+
+func GetRoomHandler(w http.ResponseWriter, r *http.Request) {
 	if pool != nil {
 		conn := pool.Get()
 		defer conn.Close()
@@ -72,8 +100,6 @@ func EchoAllHandler(w http.ResponseWriter, r *http.Request) {
 		for _, s := range items {
 			fmt.Fprintf(w, s+"\n")
 		}
-
-		GetVailabelRoomInfo("123456789")
 
 	}
 
@@ -102,8 +128,9 @@ func GetDateFormat() string {
 func StartHttpServer() bool {
 	pool = newPool("localhost:6379", "")
 
-	http.HandleFunc("/add", RecordHandler)
-	http.HandleFunc("/all", EchoAllHandler)
+	http.HandleFunc("/getname", GetIDHandler)
+	http.HandleFunc("/getroom", GetRoomHandler)
+	http.HandleFunc("/getid", GetIDHandler)
 	http.HandleFunc("/clean", ClearAllHandler)
 
 	addr := env.Get("logic", "listen")

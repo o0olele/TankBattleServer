@@ -24,6 +24,10 @@ func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 	return m
 }
 
+func (this *PlayerTask) Start() {
+	this.wstask.Start()
+}
+
 func (this *PlayerTask) OnClose() {
 
 }

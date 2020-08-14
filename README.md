@@ -1,6 +1,9 @@
 # TankBattleServer
 A tankbattle online game
 
+# Client
+[HERE]()
+
 # Prepare
 ## plugins
   - `github.com/golang/protobuf`
@@ -12,12 +15,12 @@ A tankbattle online game
   - `google.golang.org/grpc`
   - `google.golang.org/protobuf`
 
-prepare these plugins and move them into `./TankBattleBase/src`
+get these plugins and move them into `./TankBattleBase/src`
 
 ## necessities
   - [recastnavigation-go](https://github.com/fananchong/recastnavigation-go)
 
-prepare these plugins and move them into `./TankBattleBase/src`
+get these and move them into `./TankBattleBase/src`
 
 # Start
 

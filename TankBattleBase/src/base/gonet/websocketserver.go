@@ -24,6 +24,7 @@ func (this *WebSocketServer) WSBind(addr string) error {
 		glog.Error("[WS] Init Fail, ", err)
 		return err
 	}
+	glog.Info("[WS] Bind Success ", addr)
 	return nil
 }
 
@@ -40,5 +41,8 @@ func (this *WebSocketServer) WSListen(w http.ResponseWriter, r *http.Request) {
 
 	glog.Info("[WS] Connected ", r.RemoteAddr, w.Header().Get("Origin"), r.Header.Get("Origin"))
 
-	this.Derived.OnWSAccept(c)
+	if nil != this.Derived {
+		this.Derived.OnWSAccept(c)
+	}
+
 }
