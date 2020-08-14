@@ -2,16 +2,14 @@ package main
 
 import (
 	"common"
-	"container/list"
 	"errors"
+	"fmt"
 	"sync"
-
-	"github.com/golang/glog"
 )
 
 type RoomMgr struct {
 	mutex      sync.Mutex
-	unFullRoom Queue
+	unFullRoom *Queue
 	runRoom    map[uint32]*Room
 	Load       uint32 //roomnum
 	endchan    chan uint32
@@ -23,7 +21,10 @@ var mroommgr *RoomMgr
 func RoomMgr_GetMe() *RoomMgr {
 	if mroommgr == nil {
 		mroommgr = &RoomMgr{
-			unFullRoom: Queue{queue: list.New()},
+			unFullRoom: GetQueue(),
+			Load:       0,
+			runRoom:    make(map[uint32]*Room),
+			endchan:    make(chan uint32, 100),
 		}
 	}
 	return mroommgr
@@ -42,31 +43,36 @@ func (this *RoomMgr) start() {
 }
 
 //给玩家分配可用房间
-func (this *RoomMgr) GetRoom(player PlayerTask) (*Room, error) {
+func (this *RoomMgr) GetRoom(player *PlayerTask) (*Room, error) {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 	room, ok := this.unFullRoom.Front().(*Room)
-
 	if !ok && room == nil {
-		glog.Info("当前没有空房，创建新房")
+		fmt.Println("当前没有空房，创建新房")
 		rid := this.getNextRoomid()
 		room = NewRoom(common.CommonRoom, rid)
 		if !room.IsFull() {
+			fmt.Println("push")
 			this.unFullRoom.Push(room)
+			r, err := this.unFullRoom.Front().(*Room)
+			fmt.Println("pu", r, err)
 		}
 		this.Load++
 	}
 
 	err := room.AddPlayer(player)
 	if err != nil {
-		glog.Error("为玩家分配房间失败", room, player)
+		fmt.Println("为玩家分配房间失败", room, player)
 		return nil, errors.New("distribute room error")
 	}
-	glog.Info("为玩家", player, "分配房间", room)
+	fmt.Println("为玩家", player, "分配房间", room)
 	if room.IsFull() {
-		room.Start()
+		fmt.Println("gamestart")
 		this.runRoom[room.id] = room
 		this.unFullRoom.Pop()
+		r, err := this.unFullRoom.Front().(*Room)
+		fmt.Println("after pop:", r, err)
+		go room.Start()
 	}
 	return room, nil
 }

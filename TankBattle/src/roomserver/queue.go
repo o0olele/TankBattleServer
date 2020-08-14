@@ -4,8 +4,6 @@ import (
 	"container/list"
 	"errors"
 	"sync"
-
-	"github.com/golang/glog"
 )
 
 type Queue struct {
@@ -31,8 +29,10 @@ func (this *Queue) Front() interface{} {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 	front := this.queue.Front()
-	glog.Info(front)
-	return front
+	if front == nil {
+		return nil
+	}
+	return front.Value
 }
 
 func (this *Queue) Pop() (interface{}, error) {
@@ -43,5 +43,5 @@ func (this *Queue) Pop() (interface{}, error) {
 		return nil, errors.New("try Pop from an empty queue")
 	}
 	this.queue.Remove(front)
-	return front, nil
+	return front.Value, nil
 }

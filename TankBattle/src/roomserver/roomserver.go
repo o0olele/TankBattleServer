@@ -42,7 +42,7 @@ func (this *RoomServer) Init() bool {
 			glog.Error("[Start] Bind Port Fail")
 		}
 	}()
-
+	startHttpTest()
 	return true
 }
 
