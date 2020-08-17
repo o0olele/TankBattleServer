@@ -3,6 +3,7 @@ PROTOS = server.proto
 
 BASE = $(PWD)/../TankBattleBase
 PROTOC = /usr/local/bin
+LIAOCC= /home/liaocc/go
 
 BUILDVER = '0.1'
 BUILDDATE = 'date +%F'
@@ -10,7 +11,7 @@ BUILDDATE = 'date +%F'
 all: install
 
 install: 
-	export GOPATH=$(PWD):$(BASE)\
+	export GOPATH=$(PWD):$(BASE):$(LIAOCC)\
 	&& for ser in $(APPS);\
 	do \
 		go install -x $$ser;\

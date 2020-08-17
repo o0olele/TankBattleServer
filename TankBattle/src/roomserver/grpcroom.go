@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
+	"time"
 
 	proto "proto"
 
@@ -83,6 +84,18 @@ func (this *RoomGrpcClient) SendRegist() bool {
 	})
 
 	return true
+}
+
+func (this *RoomGrpcClient) SendLoad() {
+	for {
+		time.Sleep(time.Second * 2)
+
+		this.mRouteClient.Send(&proto.RoomRequest{
+			Type: proto.MsgType_Update,
+			Data: []byte(strconv.Itoa(int(RoomMgr_GetMe().GetLoad()))),
+		})
+	}
+
 }
 
 func (this *RoomGrpcClient) Close() {

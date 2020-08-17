@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/golang/glog"
 )
 
 type RoomMgr struct {
@@ -26,6 +28,7 @@ func RoomMgr_GetMe() *RoomMgr {
 			runRoom:    make(map[uint32]*Room),
 			endchan:    make(chan uint32, 100),
 		}
+		mroommgr.start()
 	}
 	return mroommgr
 }
@@ -38,6 +41,7 @@ func (this *RoomMgr) start() {
 			this.runRoom[rid] = nil
 			this.Load--
 			delete(this.runRoom, rid)
+			glog.Info("[Game]room ", rid, " end")
 		}
 	}
 }
