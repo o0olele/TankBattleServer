@@ -69,6 +69,14 @@ func (this *Room) Start() {
 
 func (this *Room) GameLoop() {
 	for i := 0; i < 30; i++ {
+		// SceneMsg, 用于同步场景，在球球里面是100ms一次，在该游戏中，SceneMsg可以包含
+		// 以下信息：当前视野、当前视野内的玩家位置（包括自己）、当前视野内的子弹位置
+
+		// 对于单次处理时间内玩家操作过多的问题，顺序处理即可，如果出现玩家卡顿的现象，再考虑优化
+		// 例如给玩家的操作添加帧号，但是这个是可选项，不是必要的
+
+		// 另外，服务器的逻辑帧率通常要高于客户端的渲染帧率，例如客户端可能是30，但是服务器可能就是
+		// 60甚至更高
 		time.Sleep(time.Duration(1) * time.Second)
 		glog.Info("game is running")
 	}
