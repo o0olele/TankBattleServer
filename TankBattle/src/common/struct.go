@@ -7,6 +7,12 @@ const (
 	MsgType_Move  MsgType = 1
 )
 
+type Pos struct {
+	Id uint32
+	X  float64
+	Y  float64
+}
+
 // 客户请求
 type ReqGetIDMsg struct {
 	DeviceId string `json:"deviceId"`
@@ -16,4 +22,8 @@ type ReqGetIDMsg struct {
 // 服务器返回
 type RetGetIDMsg struct {
 	Id uint32 `json:"id"`
+}
+
+type RetSceneMsg struct {
+	Users []Pos `json:"users"`
 }

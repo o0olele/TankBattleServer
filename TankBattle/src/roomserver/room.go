@@ -19,6 +19,8 @@ type Room struct {
 	players  map[uint32]*PlayerTask //房间内的玩家
 	curnum   uint32                 //当前房间内玩家数
 	isstart  bool
+	timeloop uint64
+	stopch   chan bool
 }
 
 //返回给客户端的房间信息
@@ -68,7 +70,9 @@ func (this *Room) Start() {
 }
 
 func (this *Room) GameLoop() {
-	for i := 0; i < 30; i++ {
+	timeTicker := time.NewTicker(time.Millisecond * 10)
+	stop := false
+	for !stop {
 		// SceneMsg, 用于同步场景，在球球里面是100ms一次，在该游戏中，SceneMsg可以包含
 		// 以下信息：当前视野、当前视野内的玩家位置（包括自己）、当前视野内的子弹位置
 
@@ -77,9 +81,18 @@ func (this *Room) GameLoop() {
 
 		// 另外，服务器的逻辑帧率通常要高于客户端的渲染帧率，例如客户端可能是30，但是服务器可能就是
 		// 60甚至更高
-		time.Sleep(time.Duration(1) * time.Second)
-		glog.Info("game is running")
+		select {
+		case <-timeTicker.C:
+			if this.timeloop%10 == 0 {
+				this.sendRoomMsg()
+			}
+			if this.timeloop != 0 && this.timeloop%12000 == 0 {
+				stop = true
+			}
+			this.timeloop++
+		}
 	}
+
 	RoomMgr_GetMe().endchan <- this.id
 }
 
@@ -88,4 +101,10 @@ func (this *Room) checkPlayer(player *PlayerTask) bool {
 		return false
 	}
 	return true
+}
+
+func (this *Room) sendRoomMsg() {
+	for _, p := range this.players {
+		p.SendSceneMsg()
+	}
 }

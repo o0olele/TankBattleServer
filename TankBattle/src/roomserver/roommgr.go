@@ -28,7 +28,7 @@ func RoomMgr_GetMe() *RoomMgr {
 			runRoom:    make(map[uint32]*Room),
 			endchan:    make(chan uint32, 100),
 		}
-		mroommgr.start()
+		go mroommgr.start()
 	}
 	return mroommgr
 }
@@ -48,6 +48,7 @@ func (this *RoomMgr) start() {
 
 //给玩家分配可用房间
 func (this *RoomMgr) GetRoom(player *PlayerTask) (*Room, error) {
+	glog.Info("[roommgr] GetRoom")
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 	room, ok := this.unFullRoom.Front().(*Room)

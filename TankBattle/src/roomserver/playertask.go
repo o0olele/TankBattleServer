@@ -4,6 +4,8 @@ import (
 	"base/gonet"
 	"bytes"
 	"encoding/binary"
+	"math/rand"
+	"time"
 
 	common "common"
 
@@ -18,11 +20,14 @@ type PlayerTask struct {
 	id   uint32
 	name string
 	room *Room
+
+	scene *Scene
 }
 
 func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 	m := &PlayerTask{
 		wstask: gonet.NewWebSocketTask(conn),
+		scene:  &Scene{},
 	}
 	m.wstask.Derived = m
 
@@ -30,8 +35,11 @@ func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 }
 
 func (this *PlayerTask) Start() {
+	this.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100
 	this.wstask.Start()
+	this.wstask.Verify()
 	RoomMgr_GetMe().GetRoom(this)
+
 }
 
 func (this *PlayerTask) OnClose() {
@@ -55,4 +63,14 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 	default:
 	}
 	return true
+}
+
+func (this *PlayerTask) SendSceneMsg() bool {
+	msg := this.scene.SceneMsg()
+	if nil == msg {
+		glog.Error("[Scene] Msg Nil")
+		return false
+	}
+
+	return this.wstask.AsyncSend(msg, 0)
 }
