@@ -2,6 +2,7 @@ package main
 
 import (
 	"base/env"
+	"common"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -60,4 +61,17 @@ func (this *AccRedis) GetIncID() (uint32, error) {
 	}
 
 	return uint32(value), nil
+}
+
+func (this *AccRedis) SetDeviceIdAndIp(id uint32, msg *common.ReqGetIDMsg) error {
+	conn := this.pool.Get()
+	defer conn.Close()
+
+	_, err := conn.Do("SET", msg.DeviceId+":"+msg.Ip, id)
+	if nil != err {
+		glog.Error("[Redis] Set Userinfo Fail ", err)
+		return err
+	}
+
+	return nil
 }

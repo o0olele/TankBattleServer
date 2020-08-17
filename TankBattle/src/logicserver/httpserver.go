@@ -17,16 +17,6 @@ func GetNameHandler(w http.ResponseWriter, r *http.Request) {
 	randName := "NickName" + GetDateFormat()
 
 	fmt.Fprintf(w, randName)
-	//json.NewEncoder(w).Encode(randName)
-
-	/*temp_values := fmt.Sprintf("%s:%s:%s", r.RemoteAddr, GetDateFormat(), values)
-
-	if pool != nil {
-		conn := pool.Get()
-		defer conn.Close()
-
-		conn.Do("LPUSH", listkey, temp_values)
-	}*/
 }
 
 func GetIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,10 +41,7 @@ func GetIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn := AccRedis_GetMe().pool.Get()
-	defer conn.Close()
-
-	_, err = conn.Do("SET", msg.DeviceId+":"+msg.Ip, id)
+	err = AccRedis_GetMe().SetDeviceIdAndIp(id, &msg)
 	if nil != err {
 		glog.Error("[login] Set Userinfo Fail ", err)
 		return
