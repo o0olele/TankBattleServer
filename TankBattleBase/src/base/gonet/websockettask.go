@@ -2,6 +2,7 @@ package gonet
 
 import (
 	"container/list"
+	"fmt"
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
@@ -108,14 +109,16 @@ func (this *WebSocketTask) recvloop() {
 
 	var datasize int
 
-	for {
+	for !this.IsClosed() {
 		_, bytemsg, err := this.Conn.ReadMessage()
 		if nil != err {
 			glog.Error("[WS] Recv Fail ", this.Conn.RemoteAddr(), ",", err)
+			this.Close()
 			return
 		}
-
+		fmt.Println("recvloop", len(bytemsg), bytemsg[3])
 		datasize = int(bytemsg[0]) | int(bytemsg[1])<<8 | int(bytemsg[2])<<16
+		fmt.Println(datasize)
 		if datasize > cmd_max_size {
 			glog.Error("[WS] Packet Too Large ", this.Conn.RemoteAddr(), ",", datasize)
 			return

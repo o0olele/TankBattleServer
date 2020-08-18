@@ -28,3 +28,7 @@ type RetSceneMsg struct {
 	Users  []Pos    `json:"users"`
 	Outter []uint32 `json:"outter"`
 }
+
+type RetTimeMsg struct {
+	Time uint64 `json:"time"`
+}

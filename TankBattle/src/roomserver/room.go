@@ -1,7 +1,12 @@
 package main
 
 import (
+	"base/env"
+	common "common"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/golang/glog"
@@ -14,14 +19,15 @@ const (
 //提供信息给roommgr管理房间
 type Room struct {
 	//mutex    sync.RWMutex
-	id       uint32                 //房间id
-	roomtype uint32                 //房间类型
-	players  map[uint32]*PlayerTask //房间内的玩家
-	curnum   uint32                 //当前房间内玩家数
-	isstart  bool
-	timeloop uint64
-	stopch   chan bool
-	Isstop   bool
+	id          uint32                 //房间id
+	roomtype    uint32                 //房间类型
+	players     map[uint32]*PlayerTask //房间内的玩家
+	curnum      uint32                 //当前房间内玩家数
+	isstart     bool
+	timeloop    uint64
+	stopch      chan bool
+	Isstop      bool
+	totgametime uint64 //in second
 }
 
 //返回给客户端的房间信息
@@ -56,6 +62,7 @@ func NewRoom(rtype, rid uint32) *Room {
 		isstart:  false,
 		Isstop:   false,
 	}
+	room.totgametime, _ = strconv.ParseUint(env.Get("room", "time"), 10, 64)
 	return room
 }
 
@@ -85,10 +92,13 @@ func (this *Room) GameLoop() {
 		// 60甚至更高
 		select {
 		case <-timeTicker.C:
-			if this.timeloop%10 == 0 {
+			if this.timeloop%1 == 0 {
 				this.sendRoomMsg()
 			}
-			if this.timeloop != 0 && this.timeloop%1200 == 0 {
+			if this.timeloop%100 == 0 { //1s
+				this.sendTime(this.totgametime - this.timeloop/100)
+			}
+			if this.timeloop != 0 && this.timeloop%(this.totgametime*100) == 0 {
 				stop = true
 			}
 			this.timeloop++
@@ -108,5 +118,20 @@ func (this *Room) checkPlayer(player *PlayerTask) bool {
 func (this *Room) sendRoomMsg() {
 	for _, p := range this.players {
 		p.SendSceneMsg()
+	}
+}
+
+func (this *Room) sendTime(t uint64) {
+	for _, p := range this.players {
+		t := common.RetTimeMsg{
+			Time: t,
+		}
+		jstr, err := json.Marshal(t)
+		if err != nil {
+			glog.Error("[Time] marshal jsonMsg err")
+			return
+		}
+		fmt.Println(string(jstr))
+		p.wstask.AsyncSend(jstr, 0)
 	}
 }

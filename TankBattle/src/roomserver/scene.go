@@ -24,8 +24,8 @@ type Scene struct {
 
 func (this *Scene) UpdateSelfPos(direct uint32) {
 	this.selfMutex.Lock()
-	this.self.X += math.Sin(float64(direct) * math.Pi / 180)
-	this.self.Y += math.Cos(float64(direct) * math.Pi / 180)
+	this.self.X += math.Sin(float64(direct)*math.Pi/180) * 3
+	this.self.Y += math.Cos(float64(direct)*math.Pi/180) * 3
 	fmt.Println(direct, math.Sin(float64(direct)*math.Pi/180), math.Cos(float64(direct)*math.Pi/180))
 	this.selfMutex.Unlock()
 

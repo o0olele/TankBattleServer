@@ -27,7 +27,7 @@ type PlayerTask struct {
 func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 	m := &PlayerTask{
 		wstask: gonet.NewWebSocketTask(conn),
-		scene:  &Scene{width: 5, height: 5},
+		scene:  &Scene{width: 20, height: 20},
 	}
 	m.wstask.Derived = m
 
