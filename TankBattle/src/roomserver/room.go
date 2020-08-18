@@ -21,6 +21,7 @@ type Room struct {
 	isstart  bool
 	timeloop uint64
 	stopch   chan bool
+	Isstop   bool
 }
 
 //返回给客户端的房间信息
@@ -53,6 +54,7 @@ func NewRoom(rtype, rid uint32) *Room {
 		players:  make(map[uint32]*PlayerTask),
 		curnum:   0,
 		isstart:  false,
+		Isstop:   false,
 	}
 	return room
 }
@@ -86,13 +88,13 @@ func (this *Room) GameLoop() {
 			if this.timeloop%10 == 0 {
 				this.sendRoomMsg()
 			}
-			if this.timeloop != 0 && this.timeloop%12000 == 0 {
+			if this.timeloop != 0 && this.timeloop%1200 == 0 {
 				stop = true
 			}
 			this.timeloop++
 		}
 	}
-
+	this.Isstop = true
 	RoomMgr_GetMe().endchan <- this.id
 }
 

@@ -25,5 +25,6 @@ type RetGetIDMsg struct {
 }
 
 type RetSceneMsg struct {
-	Users []Pos `json:"users"`
+	Users  []Pos    `json:"users"`
+	Outter []uint32 `json:"outter"`
 }

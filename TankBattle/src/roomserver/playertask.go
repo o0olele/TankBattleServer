@@ -27,7 +27,7 @@ type PlayerTask struct {
 func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 	m := &PlayerTask{
 		wstask: gonet.NewWebSocketTask(conn),
-		scene:  &Scene{},
+		scene:  &Scene{width: 5, height: 5},
 	}
 	m.wstask.Derived = m
 
@@ -38,8 +38,14 @@ func (this *PlayerTask) Start() {
 	this.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100
 	this.wstask.Start()
 	this.wstask.Verify()
-	RoomMgr_GetMe().GetRoom(this)
 
+	room, err := RoomMgr_GetMe().GetRoom(this)
+	if nil != err {
+		glog.Error("[roomserver] Allocate room fail ", err)
+		return
+	}
+
+	this.scene.room = room
 }
 
 func (this *PlayerTask) OnClose() {
@@ -60,6 +66,14 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 			return false
 		}
 		glog.Info("[WS] Parse Msg Move ", angle)
+
+		if nil == this.room {
+			return false
+		}
+		if this.room.Isstop {
+			return false
+		}
+		this.scene.UpdateSelfPos(angle)
 	default:
 	}
 	return true
