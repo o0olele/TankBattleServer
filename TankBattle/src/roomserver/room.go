@@ -104,6 +104,9 @@ func (this *Room) GameLoop() {
 				stop = true
 			}
 			this.timeloop++
+			if this.Isstop {
+				stop = true
+			}
 		}
 	}
 	this.Close()
