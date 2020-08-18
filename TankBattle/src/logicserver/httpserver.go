@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	common "common"
@@ -50,7 +51,13 @@ func GetIDHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetRoomHandler(w http.ResponseWriter, r *http.Request) {
-	GetVailabelRoomInfo("123456789")
+	info, err := GetVailabelRoomInfo("token")
+	if nil != err {
+		glog.Error("[logic] RPC get room info fail ", err)
+		return
+	}
+
+	fmt.Fprintf(w, strconv.Itoa(int(info.Port)))
 }
 
 // 时间戳转年月日 时分秒

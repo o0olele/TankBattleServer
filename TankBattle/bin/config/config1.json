@@ -11,7 +11,7 @@
 
     },
     "room":{
-        "port":"8090",
+        "port":"9001",
         "log":"./log/log_room1.log",
         "grpc":":6001",
         "listen":":9001"

@@ -18,9 +18,10 @@ type LogicService struct {
 
 func (this *LogicService) Route(ctx context.Context, request *proto.LogicRequest) (*proto.LogicResponse, error) {
 
+	ip, port := RcenterServer_GetMe().GetRoomServer()
 	info := proto.ConnectRoomInfo{
-		Ip:   0,
-		Port: 52,
+		Ip:   ip,
+		Port: port,
 	}
 	res := proto.LogicResponse{MInfo: &info}
 	return &res, nil
@@ -53,6 +54,7 @@ func (this *RoomService) Route(conn proto.StreamRoomService_RouteServer) error {
 				return err
 			}
 			fmt.Println("Server Got Regist Msg ", info.Ip, ",", info.Port)
+			RcenterServer_GetMe().RegisterRoomServer(info.Ip, info.Port, 0)
 			break
 		case proto.MsgType_Update:
 			fmt.Println("Server Got Update Msg")

@@ -37,11 +37,11 @@ func (this *RoomMgr) start() {
 		select {
 		case rid := <-this.endchan:
 			this.mutex.Lock()
-			defer this.mutex.Unlock()
 			this.runRoom[rid] = nil
 			this.Load--
 			delete(this.runRoom, rid)
 			glog.Info("[Game]room ", rid, " end")
+			this.mutex.Unlock()
 		}
 	}
 }
