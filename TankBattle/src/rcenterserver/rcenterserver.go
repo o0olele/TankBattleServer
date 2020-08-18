@@ -9,15 +9,24 @@ import (
 	"github.com/golang/glog"
 )
 
+type RLoad struct {
+	ip   uint32
+	port uint32
+	load uint32
+}
+
 type RcenterServer struct {
 	gonet.Service
+	rList []RLoad
 }
 
 var mServer *RcenterServer
 
 func RcenterServer_GetMe() *RcenterServer {
 	if nil == mServer {
-		mServer = &RcenterServer{}
+		mServer = &RcenterServer{
+			rList: make([]RLoad, 0),
+		}
 		mServer.Derived = mServer
 	}
 
@@ -43,6 +52,16 @@ func (this *RcenterServer) MainLoop() {
 
 func (this *RcenterServer) Final() bool {
 	return true
+}
+
+func (this *RcenterServer) RegisterRoomServer(ip, port, load uint32) {
+	this.rList = append(this.rList, RLoad{ip: ip, port: port, load: load})
+}
+
+func (this *RcenterServer) GetRoomServer() (uint32, uint32) {
+	// todo 负载均衡
+
+	return this.rList[0].ip, this.rList[0].port
 }
 
 var (
