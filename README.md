@@ -24,8 +24,6 @@ get these plugins and move them into `./TankBattleBase/src`
   - redis
   - [recastnavigation-go](https://github.com/fananchong/recastnavigation-go)
 
-get these and move them into `./TankBattleBase/src`
-
 # Start
 
 ~~~shell
