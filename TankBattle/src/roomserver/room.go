@@ -28,6 +28,7 @@ type Room struct {
 	stopch      chan bool
 	Isstop      bool
 	totgametime uint64 //in second
+	endchan     chan bool
 }
 
 //返回给客户端的房间信息
@@ -61,6 +62,7 @@ func NewRoom(rtype, rid uint32) *Room {
 		curnum:   0,
 		isstart:  false,
 		Isstop:   false,
+		endchan:  make(chan bool),
 	}
 	room.totgametime, _ = strconv.ParseUint(env.Get("room", "time"), 10, 64)
 	return room
@@ -105,10 +107,18 @@ func (this *Room) GameLoop() {
 				stop = true
 			}
 			this.timeloop++
+			if this.Isstop {
+				stop = true
+			}
 		}
 	}
-	this.Isstop = true
-	RoomMgr_GetMe().endchan <- this.id
+	this.Close()
+}
+func (this *Room) Close() {
+	if !this.Isstop {
+		this.Isstop = true
+		RoomMgr_GetMe().endchan <- this.id
+	}
 }
 
 func (this *Room) checkPlayer(player *PlayerTask) bool {

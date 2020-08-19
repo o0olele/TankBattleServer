@@ -5,6 +5,7 @@ type MsgType uint16
 const (
 	MsgType_Token MsgType = 0
 	MsgType_Move  MsgType = 1
+	MsgType_Finsh MsgType = 2
 )
 
 type Pos struct {
