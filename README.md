@@ -20,6 +20,8 @@ A tankbattle online game
 get these plugins and move them into `./TankBattleBase/src`
 
 ## necessities
+  - nginx
+  - redis
   - [recastnavigation-go](https://github.com/fananchong/recastnavigation-go)
 
 get these and move them into `./TankBattleBase/src`
