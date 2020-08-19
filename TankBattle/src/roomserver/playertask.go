@@ -43,6 +43,8 @@ func (this *PlayerTask) Start() {
 	this.wstask.Start()
 	this.wstask.Verify() // 待优化
 
+	this.scene.self.Id = this.id
+
 	room, err := RoomMgr_GetMe().GetRoom(this)
 	if nil != err {
 		glog.Error("[roomserver] Allocate room fail ", err)

@@ -25,6 +25,7 @@ type Scene struct {
 func (this *Scene) CaculateNext(direct uint32) {
 	this.next.X = this.self.X + math.Sin(float64(direct)*math.Pi/180)*this.speed
 	this.next.Y = this.self.Y + math.Cos(float64(direct)*math.Pi/180)*this.speed
+	this.next.Id = this.self.Id
 }
 
 func (this *Scene) UpdateSelfPos(direct uint32) {
