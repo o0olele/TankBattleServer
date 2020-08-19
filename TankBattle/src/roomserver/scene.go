@@ -3,7 +3,6 @@ package main
 import (
 	common "common"
 	"encoding/json"
-	"fmt"
 	"math"
 	"sync"
 
@@ -12,37 +11,55 @@ import (
 
 type Scene struct {
 	self      common.Pos
+	next      common.Pos
 	selfMutex sync.Mutex
 	others    []common.Pos
 	outters   []uint32
+	hasMove   bool
 
-	width  float64
-	height float64
+	speed float64
 
 	room *Room
 }
 
+func (this *Scene) CaculateNext(direct uint32) {
+	this.next.X = this.self.X + math.Sin(float64(direct)*math.Pi/180)*this.speed
+	this.next.Y = this.self.Y + math.Cos(float64(direct)*math.Pi/180)*this.speed
+}
+
 func (this *Scene) UpdateSelfPos(direct uint32) {
 	this.selfMutex.Lock()
-	this.self.X += math.Sin(float64(direct)*math.Pi/180) * 3
-	this.self.Y += math.Cos(float64(direct)*math.Pi/180) * 3
-	fmt.Println(direct, math.Sin(float64(direct)*math.Pi/180), math.Cos(float64(direct)*math.Pi/180))
-	this.selfMutex.Unlock()
 
-	this.UpdatePos()
+	/*if 0 == this.speed {
+		this.hasMove = false
+		return
+	}*/
+	this.CaculateNext(direct)
+	this.self = this.next
+	//this.hasMove = true
+	this.UpdateSpeed(0)
+
+	this.selfMutex.Unlock()
 }
 
 func (this *Scene) UpdatePos() {
 	this.others = []common.Pos{}
 	this.outters = []uint32{}
 	for _, user := range this.room.players {
-		if math.Abs(user.scene.self.X-this.self.X) < this.height/2 &&
-			math.Abs(user.scene.self.Y-this.self.Y) < this.width/2 {
+		/*if !user.scene.hasMove {
+			continue
+		}*/
+		if math.Abs(user.scene.self.X-this.self.X) < common.SceneHeight/2 &&
+			math.Abs(user.scene.self.Y-this.self.Y) < common.SceneWidth/2 {
 			this.others = append(this.others, common.Pos{Id: user.id, X: user.scene.self.X, Y: user.scene.self.Y})
 		} else {
 			this.outters = append(this.outters, user.id)
 		}
 	}
+}
+
+func (this *Scene) UpdateSpeed(s float64) {
+	this.speed = s
 }
 
 func (this *Scene) SceneMsg() []byte {

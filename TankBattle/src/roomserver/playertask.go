@@ -16,10 +16,11 @@ import (
 type PlayerTask struct {
 	wstask *gonet.WebSocketTask
 
-	key  string
-	id   uint32
-	name string
-	room *Room
+	key    string
+	id     uint32
+	name   string
+	room   *Room
+	direct uint32
 
 	scene *Scene
 }
@@ -27,7 +28,10 @@ type PlayerTask struct {
 func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 	m := &PlayerTask{
 		wstask: gonet.NewWebSocketTask(conn),
-		scene:  &Scene{width: 20, height: 20},
+		scene: &Scene{
+			speed:   common.SceneSpeed,
+			hasMove: true,
+		},
 	}
 	m.wstask.Derived = m
 
@@ -73,7 +77,8 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		if this.room.Isstop {
 			return false
 		}
-		this.scene.UpdateSelfPos(angle)
+		this.direct = angle
+		this.scene.UpdateSpeed(common.SceneSpeed)
 	default:
 	}
 	return true
@@ -87,4 +92,12 @@ func (this *PlayerTask) SendSceneMsg() bool {
 	}
 
 	return this.wstask.AsyncSend(msg, 0)
+}
+
+func (this *PlayerTask) Update() {
+	this.scene.UpdateSelfPos(this.direct)
+}
+
+func (this *PlayerTask) UpdateOthers() {
+	this.scene.UpdatePos()
 }

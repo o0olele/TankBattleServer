@@ -32,3 +32,9 @@ type RetSceneMsg struct {
 type RetTimeMsg struct {
 	Time uint64 `json:"time"`
 }
+
+const (
+	SceneWidth  float64 = 20
+	SceneHeight float64 = 20
+	SceneSpeed  float64 = 0.1
+)

@@ -92,7 +92,10 @@ func (this *Room) GameLoop() {
 		// 60甚至更高
 		select {
 		case <-timeTicker.C:
-			if this.timeloop%1 == 0 {
+			if this.timeloop%2 == 0 { //0.02s
+				this.update()
+			}
+			if this.timeloop%2 == 0 { //0.1s
 				this.sendRoomMsg()
 			}
 			if this.timeloop%100 == 0 { //1s
@@ -133,5 +136,15 @@ func (this *Room) sendTime(t uint64) {
 		}
 		fmt.Println(string(jstr))
 		p.wstask.AsyncSend(jstr, 0)
+	}
+}
+
+func (this *Room) update() {
+	for _, p := range this.players {
+		p.Update()
+	}
+
+	for _, p := range this.players {
+		p.UpdateOthers()
 	}
 }
