@@ -39,9 +39,9 @@ func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 }
 
 func (this *PlayerTask) Start() {
-	this.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100
+	this.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100 // 待优化
 	this.wstask.Start()
-	this.wstask.Verify()
+	this.wstask.Verify() // 待优化
 
 	room, err := RoomMgr_GetMe().GetRoom(this)
 	if nil != err {
