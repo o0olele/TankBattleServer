@@ -79,7 +79,9 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		if this.room.Isstop {
 			return false
 		}
+		this.direct = angle
 		this.scene.UpdateSelfPos(angle)
+		this.scene.UpdateSpeed(common.SceneSpeed)
 	case common.MsgType_Finsh:
 		this.room.Close()
 	default:

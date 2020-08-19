@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	MaxPlayerNum uint32 = 4
+	MaxPlayerNum uint32 = 1
 )
 
 //提供信息给roommgr管理房间

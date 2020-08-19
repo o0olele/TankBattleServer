@@ -31,8 +31,8 @@ func (this *Scene) CaculateNext(direct uint32) {
 func (this *Scene) UpdateSelfPos(direct uint32) {
 	this.selfMutex.Lock()
 
-	/*后续优化
-	  if 0 == this.speed {
+	// 后续优化
+	/*if 0 == this.speed {
 		this.hasMove = false
 		return
 	}*/
