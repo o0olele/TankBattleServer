@@ -10,12 +10,12 @@ import (
 )
 
 type Scene struct {
-	self      common.Pos
-	next      common.Pos
+	self      common.Pos // 自身当前坐标
+	next      common.Pos // 使用next坐标进行计算，便于丢弃
 	selfMutex sync.Mutex
-	others    []common.Pos
-	outters   []uint32
-	hasMove   bool
+	others    []common.Pos // 其他玩家信息
+	outters   []uint32     // 不再视野内玩家id
+	hasMove   bool         // 标识是否移动，用于后续优化（游戏开始时发送所有玩家列表，游戏中发送移动的玩家信息）
 
 	speed float64
 
@@ -30,7 +30,8 @@ func (this *Scene) CaculateNext(direct uint32) {
 func (this *Scene) UpdateSelfPos(direct uint32) {
 	this.selfMutex.Lock()
 
-	/*if 0 == this.speed {
+	/*后续优化
+	  if 0 == this.speed {
 		this.hasMove = false
 		return
 	}*/
@@ -46,7 +47,8 @@ func (this *Scene) UpdatePos() {
 	this.others = []common.Pos{}
 	this.outters = []uint32{}
 	for _, user := range this.room.players {
-		/*if !user.scene.hasMove {
+		/*后续优化
+		  if !user.scene.hasMove {
 			continue
 		}*/
 		if math.Abs(user.scene.self.X-this.self.X) < common.SceneHeight/2 &&
