@@ -17,6 +17,11 @@ const (
 )
 
 const (
+	BulletSpeed float64 = 0.5
+	BulletLife  int64   = 5
+)
+
+const (
 	Task_TimeOut = 20
 )
 
