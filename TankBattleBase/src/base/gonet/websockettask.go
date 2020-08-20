@@ -25,7 +25,6 @@ type WebSocketTask struct {
 	Conn        *websocket.Conn
 	Derived     IWebSocketTask
 	msgChan     chan []byte
-	signal      chan int
 }
 
 func NewWebSocketTask(conn *websocket.Conn) *WebSocketTask {
@@ -36,14 +35,6 @@ func NewWebSocketTask(conn *websocket.Conn) *WebSocketTask {
 		stopedChan:  make(chan bool, 1),
 		sendMsgList: list.New(),
 		msgChan:     make(chan []byte, 1024),
-		signal:      make(chan int, 1),
-	}
-}
-
-func (this *WebSocketTask) Signal() {
-	select {
-	case this.signal <- 1:
-	default:
 	}
 }
 
