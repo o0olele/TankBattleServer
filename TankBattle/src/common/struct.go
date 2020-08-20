@@ -6,6 +6,17 @@ const (
 	MsgType_Token MsgType = 0
 	MsgType_Move  MsgType = 1
 	MsgType_Finsh MsgType = 2
+	MsgType_Heart MsgType = 3
+)
+
+const (
+	SceneWidth  float64 = 20
+	SceneHeight float64 = 20
+	SceneSpeed  float64 = 0.1
+)
+
+const (
+	Task_TimeOut = 10
 )
 
 type Pos struct {
@@ -33,9 +44,3 @@ type RetSceneMsg struct {
 type RetTimeMsg struct {
 	Time uint64 `json:"time"`
 }
-
-const (
-	SceneWidth  float64 = 20
-	SceneHeight float64 = 20
-	SceneSpeed  float64 = 0.1
-)
