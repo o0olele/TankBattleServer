@@ -192,6 +192,7 @@ func (this *PlayerTaskMgr) iTimeAction() {
 					}
 					glog.Info("[Player] Connection timeout, player id=", t.id)
 				}
+				ptasks = ptasks[:0]
 			}
 			loop += 1
 		}

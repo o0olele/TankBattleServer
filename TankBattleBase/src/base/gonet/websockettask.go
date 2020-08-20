@@ -59,7 +59,7 @@ func (this *WebSocketTask) Stop() bool {
 	if !this.IsClosed() && len(this.stopedChan) == 0 {
 		this.stopedChan <- true
 	} else {
-		glog.Info("[WS Connect] Stop Connect Fail")
+		glog.Info("[WS Connect] Stop Connect Fail ", len(this.stopedChan))
 		return false
 	}
 	glog.Info("[WS Connect] Stop Connect Success")
