@@ -55,14 +55,15 @@ func (this *Scene) addBullet(direct uint32) {
 		Btype:  this.self.Id,
 		Pos:    initpos,
 		Direct: direct,
+		Time:   time.Now().Unix(),
 	}
 	this.room.bulletcount++
 }
 
 func updateBulletPos(bullet *common.Bullet) {
 	angle := bullet.Direct
-	bullet.Pos.X += math.Sin(float64(angle)*math.Pi/180) * 0.1
-	bullet.Pos.Y += math.Cos(float64(angle)*math.Pi/180) * 0.1
+	bullet.Pos.X += math.Sin(float64(angle)*math.Pi/180) * 0.05
+	bullet.Pos.Y += math.Cos(float64(angle)*math.Pi/180) * 0.05
 }
 
 //获取视野内的子弹
@@ -70,7 +71,7 @@ func (this *Scene) getBullet() {
 	this.bullets = []*common.RetBullet{}
 	all := this.room.allbullet
 	for _, bullet := range all {
-		if time.Now().Unix()-int64(bullet.Time) > 2 {
+		if time.Now().Unix()-int64(bullet.Time) > 10 {
 			delete(this.room.allbullet, bullet.Id)
 		}
 		if math.Abs(bullet.Pos.X-this.self.X) < common.SceneHeight/2 &&

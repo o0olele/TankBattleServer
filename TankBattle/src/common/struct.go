@@ -41,7 +41,7 @@ type Bullet struct {
 	Btype  uint32
 	Pos    Pos
 	Direct uint32
-	Time   uint32
+	Time   int64
 }
 type RetSceneMsg struct {
 	Users   []Pos        `json:"users"`

@@ -81,7 +81,6 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 	case common.MsgType_Token:
 	case common.MsgType_Move:
 
-		this.scene.addBullet(this.direct)
 		var angle uint32
 		err := binary.Read(bytes.NewReader(data[4:]), binary.LittleEndian, &angle)
 		if nil != err {
