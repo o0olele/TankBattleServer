@@ -6,6 +6,7 @@ const (
 	MsgType_Token MsgType = 0
 	MsgType_Move  MsgType = 1
 	MsgType_Finsh MsgType = 2
+	MsgType_Shoot MsgType = 3
 )
 
 type Pos struct {
@@ -24,10 +25,15 @@ type ReqGetIDMsg struct {
 type RetGetIDMsg struct {
 	Id uint32 `json:"id"`
 }
-
+type Bullet struct {
+	Id    uint32
+	Btype uint32
+	Pos   Pos
+}
 type RetSceneMsg struct {
-	Users  []Pos    `json:"users"`
-	Outter []uint32 `json:"outter"`
+	Users   []Pos    `json:"users"`
+	Outter  []uint32 `json:"outter"`
+	Bullets []Bullet `json:"bullets"`
 }
 
 type RetTimeMsg struct {
