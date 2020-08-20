@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	MaxPlayerNum uint32 = 1
+	MaxPlayerNum uint32 = 2
 )
 
 //提供信息给roommgr管理房间
@@ -28,7 +28,9 @@ type Room struct {
 	stopch      chan bool
 	Isstop      bool
 	totgametime uint64 //in second
+	allbullet   map[uint32]*common.Bullet
 	endchan     chan bool
+	bulletcount uint32
 }
 
 //返回给客户端的房间信息
@@ -56,13 +58,15 @@ func (this *Room) AddPlayer(player *PlayerTask) error {
 
 func NewRoom(rtype, rid uint32) *Room {
 	room := &Room{
-		id:       rid,
-		roomtype: rtype,
-		players:  make(map[uint32]*PlayerTask),
-		curnum:   0,
-		isstart:  false,
-		Isstop:   false,
-		endchan:  make(chan bool),
+		id:          rid,
+		roomtype:    rtype,
+		players:     make(map[uint32]*PlayerTask),
+		curnum:      0,
+		isstart:     false,
+		Isstop:      false,
+		endchan:     make(chan bool),
+		allbullet:   make(map[uint32]*common.Bullet),
+		bulletcount: 0,
 	}
 	room.totgametime, _ = strconv.ParseUint(env.Get("room", "time"), 10, 64)
 	return room
@@ -96,6 +100,10 @@ func (this *Room) GameLoop() {
 		case <-timeTicker.C:
 			if this.timeloop%2 == 0 { //0.02s
 				this.update()
+
+				for _, b := range this.allbullet {
+					updateBulletPos(b)
+				}
 			}
 			if this.timeloop%2 == 0 { //0.1s
 				this.sendRoomMsg()
@@ -157,4 +165,5 @@ func (this *Room) update() {
 	for _, p := range this.players {
 		p.UpdateOthers()
 	}
+
 }

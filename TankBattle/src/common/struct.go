@@ -37,16 +37,22 @@ type RetGetIDMsg struct {
 	Id uint32 `json:"id"`
 }
 type Bullet struct {
-	Id    uint32
-	Btype uint32
-	Pos   Pos
+	Id     uint32
+	Btype  uint32
+	Pos    Pos
+	Direct uint32
+	Time   uint32
 }
 type RetSceneMsg struct {
-	Users   []Pos    `json:"users"`
-	Outter  []uint32 `json:"outter"`
-	Bullets []Bullet `json:"bullets"`
+	Users   []Pos        `json:"users"`
+	Outter  []uint32     `json:"outter"`
+	Bullets []*RetBullet `json:"bullets"`
 }
 
 type RetTimeMsg struct {
 	Time uint64 `json:"time"`
+}
+type RetBullet struct {
+	Id  uint32
+	Pos Pos
 }
