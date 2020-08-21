@@ -29,10 +29,11 @@ const (
 	PlayerSize float64 = 1
 )
 
-type Pos struct {
+type Stat struct {
 	Id uint32
 	X  float64
 	Y  float64
+	HP uint
 }
 
 // 客户请求
@@ -48,12 +49,12 @@ type RetGetIDMsg struct {
 type Bullet struct {
 	Id     uint32
 	Btype  uint32
-	Pos    Pos
+	Pos    Stat
 	Direct uint32
 	Time   int64
 }
 type RetSceneMsg struct {
-	Users   []Pos        `json:"users"`
+	Users   []Stat       `json:"users"`
 	Outter  []uint32     `json:"outter"`
 	Bullets []*RetBullet `json:"bullets"`
 }
@@ -63,5 +64,5 @@ type RetTimeMsg struct {
 }
 type RetBullet struct {
 	Id  uint32
-	Pos Pos
+	Pos Stat
 }

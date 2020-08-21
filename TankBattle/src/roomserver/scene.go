@@ -3,7 +3,6 @@ package main
 import (
 	common "common"
 	"encoding/json"
-	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -12,12 +11,12 @@ import (
 )
 
 type Scene struct {
-	self      common.Pos // 自身当前坐标
-	next      common.Pos // 使用next坐标进行计算，便于丢弃
+	self      common.Stat // 自身当前坐标
+	next      common.Stat // 使用next坐标进行计算，便于丢弃
 	selfMutex sync.Mutex
-	others    []common.Pos // 其他玩家信息
-	outters   []uint32     // 不再视野内玩家id
-	hasMove   bool         // 标识是否移动，用于后续优化（游戏开始时发送所有玩家列表，游戏中发送移动的玩家信息）
+	others    []common.Stat // 其他玩家信息
+	outters   []uint32      // 不再视野内玩家id
+	hasMove   bool          // 标识是否移动，用于后续优化（游戏开始时发送所有玩家列表，游戏中发送移动的玩家信息）
 
 	speed   float64
 	bullets []*common.RetBullet
@@ -91,7 +90,7 @@ func (this *Scene) getBullet() {
 	}
 }
 func (this *Scene) UpdatePos() {
-	this.others = []common.Pos{}
+	this.others = []common.Stat{}
 	this.outters = []uint32{}
 	for _, user := range this.room.players {
 		/*后续优化
@@ -104,7 +103,7 @@ func (this *Scene) UpdatePos() {
 
 		if math.Abs(user.scene.self.X-this.self.X) < common.SceneHeight/2 &&
 			math.Abs(user.scene.self.Y-this.self.Y) < common.SceneWidth/2 {
-			this.others = append(this.others, common.Pos{Id: user.id, X: user.scene.self.X, Y: user.scene.self.Y})
+			this.others = append(this.others, common.Stat{Id: user.id, X: user.scene.self.X, Y: user.scene.self.Y})
 		} else {
 			this.outters = append(this.outters, user.id)
 		}
@@ -119,7 +118,7 @@ func (this *Scene) SceneMsg() []byte {
 	this.UpdatePos()
 	this.getBullet()
 	var users common.RetSceneMsg
-	users.Users = []common.Pos{}
+	users.Users = []common.Stat{}
 	users.Outter = []uint32{}
 
 	users.Users = append(users.Users, this.self)
@@ -132,9 +131,9 @@ func (this *Scene) SceneMsg() []byte {
 		glog.Error("[Scene] Scene Msg Error ", err)
 		return nil
 	}
-	if len(users.Bullets) != 0 {
+	/*if len(users.Bullets) != 0 {
 		fmt.Println("--------------------------")
 		fmt.Println(string(bytes))
-	}
+	}*/
 	return bytes
 }
