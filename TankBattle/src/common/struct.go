@@ -27,7 +27,7 @@ const (
 
 const (
 	PlayerSize float64 = 1
-	FullHP     uint32  = 5
+	FullHP     uint32  = 100
 )
 
 type Stat struct {
@@ -66,4 +66,8 @@ type RetTimeMsg struct {
 type RetBullet struct {
 	Id  uint32
 	Pos Stat
+}
+
+type RetOverMsg struct {
+	End bool `json:"end"`
 }

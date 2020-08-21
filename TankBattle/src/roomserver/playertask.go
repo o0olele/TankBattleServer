@@ -4,6 +4,7 @@ import (
 	"base/gonet"
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"math/rand"
 	"runtime/debug"
 	"sync"
@@ -115,6 +116,11 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 	default:
 	}
 	return true
+}
+
+func (this *PlayerTask) SendOverMsg() {
+	bytes, _ := json.Marshal(common.RetOverMsg{End: true})
+	this.wstask.AsyncSend(bytes, 0)
 }
 
 func (this *PlayerTask) SendSceneMsg() bool {

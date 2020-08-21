@@ -89,8 +89,11 @@ func beshoot(last, next *common.Bullet, player *PlayerTask) bool {
 	if common.GetDDDistance(ndot, pdot) < common.PlayerSize {
 		return true
 	}
-	if common.TriCos(ldot, pdot, ndot) > 0 && common.TriCos(ndot, pdot, ldot) > 0 {
-		return true
+	line := common.GetLine(ldot, ndot)
+	if common.GetDLDistance(line, pdot) < common.PlayerSize {
+		if common.TriCos(ldot, pdot, ndot) > 0 && common.TriCos(ndot, pdot, ldot) > 0 {
+			return true
+		}
 	}
 	return false
 }

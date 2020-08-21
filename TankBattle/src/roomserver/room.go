@@ -123,6 +123,9 @@ func (this *Room) GameLoop() {
 }
 func (this *Room) Close() {
 	if !this.Isstop {
+		for _, player := range this.players {
+			player.SendOverMsg()
+		}
 		this.Isstop = true
 		RoomMgr_GetMe().endchan <- this.id
 	}
