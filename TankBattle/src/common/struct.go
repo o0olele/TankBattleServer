@@ -27,13 +27,14 @@ const (
 
 const (
 	PlayerSize float64 = 1
+	FullHP     uint32  = 5
 )
 
 type Stat struct {
 	Id uint32
 	X  float64
 	Y  float64
-	HP uint
+	HP uint32
 }
 
 // 客户请求

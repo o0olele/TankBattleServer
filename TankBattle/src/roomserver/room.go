@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/golang/glog"
@@ -28,7 +29,8 @@ type Room struct {
 	stopch      chan bool
 	Isstop      bool
 	totgametime uint64 //in second
-	allbullet   map[uint32]*common.Bullet
+	allbullet   sync.Map
+	//allbullet   map[uint32]*common.Bullet
 	endchan     chan bool
 	bulletcount uint32
 }
@@ -58,15 +60,15 @@ func (this *Room) AddPlayer(player *PlayerTask) error {
 
 func NewRoom(rtype, rid uint32) *Room {
 	room := &Room{
-		id:          rid,
-		roomtype:    rtype,
-		players:     make(map[uint32]*PlayerTask),
-		curnum:      0,
-		isstart:     false,
-		Isstop:      false,
-		endchan:     make(chan bool),
-		allbullet:   make(map[uint32]*common.Bullet),
-		bulletcount: 0,
+		id:       rid,
+		roomtype: rtype,
+		players:  make(map[uint32]*PlayerTask),
+		curnum:   0,
+		isstart:  false,
+		Isstop:   false,
+		endchan:  make(chan bool),
+		//allbullet:   make(map[uint32]*common.Bullet),
+		bulletcount: 1,
 	}
 	room.totgametime, _ = strconv.ParseUint(env.Get("room", "time"), 10, 64)
 	return room
@@ -101,9 +103,6 @@ func (this *Room) GameLoop() {
 			if this.timeloop%2 == 0 { //0.02s
 				this.update()
 
-				for _, b := range this.allbullet {
-					updateBulletPos(b)
-				}
 			}
 			if this.timeloop%2 == 0 { //0.1s
 				this.sendRoomMsg()
@@ -165,5 +164,14 @@ func (this *Room) update() {
 	for _, p := range this.players {
 		p.UpdateOthers()
 	}
+
+	this.allbullet.Range(func(k, v interface{}) bool {
+		b, ok := v.(*common.Bullet)
+		if !ok {
+			return false
+		}
+		updateBulletPos(b, this.players)
+		return true
+	})
 
 }

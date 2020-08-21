@@ -24,9 +24,6 @@ type PlayerTask struct {
 	activetime time.Time
 	room       *Room
 	direct     uint32
-	mybullet   map[uint32]*common.Bullet
-
-	Hp uint32
 
 	scene *Scene
 }
@@ -40,6 +37,7 @@ func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 		},
 		activetime: time.Now(),
 	}
+	m.scene.self.HP = common.FullHP
 	m.wstask.Derived = m
 
 	return m

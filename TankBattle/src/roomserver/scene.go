@@ -3,8 +3,10 @@ package main
 import (
 	common "common"
 	"encoding/json"
+	"fmt"
 	"math"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/golang/glog"
@@ -49,27 +51,41 @@ func (this *Scene) UpdateSelfPos(direct uint32) {
 func (this *Scene) addBullet(direct uint32) {
 	initpos := this.self
 	initpos.Id = this.self.Id
-	this.room.allbullet[this.room.bulletcount] = &common.Bullet{
+	this.room.allbullet.Store(this.room.bulletcount, &common.Bullet{
 		Id:     this.room.bulletcount,
 		Btype:  this.self.Id,
 		Pos:    initpos,
 		Direct: direct,
 		Time:   time.Now().Unix(),
-	}
-	this.room.bulletcount++
+	})
+	atomic.StoreUint32(&this.room.bulletcount, this.room.bulletcount+1)
 }
 
-func updateBulletPos(bullet *common.Bullet) {
+func updateBulletPos(bullet *common.Bullet, players map[uint32]*PlayerTask) {
 	angle := bullet.Direct
+	last := *bullet
 	bullet.Pos.X += math.Sin(float64(angle)*math.Pi/180) * common.BulletSpeed
 	bullet.Pos.Y += math.Cos(float64(angle)*math.Pi/180) * common.BulletSpeed
+	for _, player := range players {
+		if beshoot(&last, bullet, player) {
+			player.scene.self.HP--
+			bullet.Time += common.BulletLife
+		}
+	}
 }
 
-func beshoot(bullet common.Bullet, player PlayerTask) bool {
-	d1 := common.Dot{X: bullet.Pos.X, Y: bullet.Pos.Y}
-	d2 := common.Dot{X: player.scene.self.X, Y: player.scene.self.Y}
-	d := common.GetDDDistance(d1, d2)
-	if d < common.PlayerSize {
+func beshoot(last, next *common.Bullet, player *PlayerTask) bool {
+	if player.scene == nil {
+		return false
+	}
+	ndot := common.Dot{X: next.Pos.X, Y: next.Pos.Y}
+	ldot := common.Dot{X: last.Pos.X, Y: last.Pos.Y}
+
+	pdot := common.Dot{X: player.scene.self.X, Y: player.scene.self.Y}
+	if common.GetDDDistance(ndot, pdot) < common.PlayerSize {
+		return true
+	}
+	if common.TriCos(ldot, pdot, ndot) > 0 && common.TriCos(ndot, pdot, ldot) > 0 {
 		return true
 	}
 	return false
@@ -78,16 +94,23 @@ func beshoot(bullet common.Bullet, player PlayerTask) bool {
 //获取视野内的子弹
 func (this *Scene) getBullet() {
 	this.bullets = []*common.RetBullet{}
-	all := this.room.allbullet
-	for _, bullet := range all {
+
+	this.room.allbullet.Range(func(key, value interface{}) bool {
+		bullet, ok := value.(*common.Bullet)
+		if !ok {
+			return false
+		}
 		if time.Now().Unix()-int64(bullet.Time) > common.BulletLife {
-			delete(this.room.allbullet, bullet.Id)
+			this.room.allbullet.Delete(bullet.Id)
+			return true
 		}
 		if math.Abs(bullet.Pos.X-this.self.X) < common.SceneHeight/2 &&
 			math.Abs(bullet.Pos.Y-this.self.Y) < common.SceneWidth/2 {
 			this.bullets = append(this.bullets, &common.RetBullet{Pos: bullet.Pos, Id: bullet.Id})
 		}
-	}
+		return true
+	})
+
 }
 func (this *Scene) UpdatePos() {
 	this.others = []common.Stat{}
@@ -131,9 +154,9 @@ func (this *Scene) SceneMsg() []byte {
 		glog.Error("[Scene] Scene Msg Error ", err)
 		return nil
 	}
-	/*if len(users.Bullets) != 0 {
+	if len(users.Bullets) != 0 {
 		fmt.Println("--------------------------")
 		fmt.Println(string(bytes))
-	}*/
+	}
 	return bytes
 }
