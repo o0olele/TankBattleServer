@@ -29,6 +29,7 @@ func (this *Scene) CaculateNext(direct uint32) {
 	this.next.X = this.self.X + math.Sin(float64(direct)*math.Pi/180)*this.speed
 	this.next.Y = this.self.Y + math.Cos(float64(direct)*math.Pi/180)*this.speed
 	this.next.Id = this.self.Id
+	this.next.HP = this.self.HP
 }
 
 func (this *Scene) UpdateSelfPos(direct uint32) {
@@ -67,7 +68,10 @@ func updateBulletPos(bullet *common.Bullet, players map[uint32]*PlayerTask) {
 	bullet.Pos.X += math.Sin(float64(angle)*math.Pi/180) * common.BulletSpeed
 	bullet.Pos.Y += math.Cos(float64(angle)*math.Pi/180) * common.BulletSpeed
 	for _, player := range players {
-		if beshoot(&last, bullet, player) {
+		if player.scene == nil {
+			return
+		}
+		if player.scene.self.HP > 0 && beshoot(&last, bullet, player) {
 			player.scene.self.HP--
 			bullet.Time += common.BulletLife
 		}
@@ -75,7 +79,7 @@ func updateBulletPos(bullet *common.Bullet, players map[uint32]*PlayerTask) {
 }
 
 func beshoot(last, next *common.Bullet, player *PlayerTask) bool {
-	if player.scene == nil {
+	if player.scene == nil || last.Btype == player.scene.self.Id {
 		return false
 	}
 	ndot := common.Dot{X: next.Pos.X, Y: next.Pos.Y}
@@ -126,7 +130,7 @@ func (this *Scene) UpdatePos() {
 
 		if math.Abs(user.scene.self.X-this.self.X) < common.SceneHeight/2 &&
 			math.Abs(user.scene.self.Y-this.self.Y) < common.SceneWidth/2 {
-			this.others = append(this.others, common.Stat{Id: user.id, X: user.scene.self.X, Y: user.scene.self.Y})
+			this.others = append(this.others, common.Stat{Id: user.id, X: user.scene.self.X, Y: user.scene.self.Y, HP: user.scene.self.HP})
 		} else {
 			this.outters = append(this.outters, user.id)
 		}
