@@ -25,7 +25,10 @@ type PlayerTask struct {
 	room       *Room
 	direct     uint32
 	mybullet   map[uint32]*common.Bullet
-	scene      *Scene
+
+	Hp uint32
+
+	scene *Scene
 }
 
 func NewPlayerTask(conn *websocket.Conn) *PlayerTask {

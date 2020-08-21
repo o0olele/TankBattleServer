@@ -25,6 +25,10 @@ const (
 	Task_TimeOut = 20
 )
 
+const (
+	PlayerSize float64 = 1
+)
+
 type Pos struct {
 	Id uint32
 	X  float64

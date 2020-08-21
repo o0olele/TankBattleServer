@@ -66,6 +66,16 @@ func updateBulletPos(bullet *common.Bullet) {
 	bullet.Pos.Y += math.Cos(float64(angle)*math.Pi/180) * common.BulletSpeed
 }
 
+func beshoot(bullet common.Bullet, player PlayerTask) bool {
+	d1 := common.Dot{X: bullet.Pos.X, Y: bullet.Pos.Y}
+	d2 := common.Dot{X: player.scene.self.X, Y: player.scene.self.Y}
+	d := common.GetDDDistance(d1, d2)
+	if d < common.PlayerSize {
+		return true
+	}
+	return false
+}
+
 //获取视野内的子弹
 func (this *Scene) getBullet() {
 	this.bullets = []*common.RetBullet{}
