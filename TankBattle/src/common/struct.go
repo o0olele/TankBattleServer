@@ -9,7 +9,11 @@ const (
 	MsgType_Shoot MsgType = 3
 	MsgType_Heart MsgType = 4
 )
-
+const (
+	PlayerMove uint32 = 1
+	AddBullet  uint32 = 2
+	BulletMove uint32 = 3
+)
 const (
 	SceneSpeed  float64 = 0.2
 	SceneWidth  float64 = 20
@@ -30,11 +34,13 @@ const (
 	FullHP     uint32  = 100
 )
 
+type Pos struct {
+	X float64
+	Y float64
+}
 type Stat struct {
-	Id uint32
-	X  float64
-	Y  float64
-	HP uint32
+	Pos Pos
+	HP  uint32
 }
 
 // 客户请求
@@ -54,10 +60,24 @@ type Bullet struct {
 	Direct uint32
 	Time   int64
 }
+type Move struct {
+	Userid uint32 `json:"userid"`
+	Pos    Pos
+	HP     uint32
+}
+type ReMove struct {
+	Userid uint32 `json:"userid"`
+}
+type Add struct {
+	Userid uint32 `json:"userid"`
+	Pos    Pos
+	HP     uint32
+}
 type RetSceneMsg struct {
-	Users   []Stat       `json:"users"`
-	Outter  []uint32     `json:"outter"`
-	Bullets []*RetBullet `json:"bullets"`
+	Move    []Move      `json:"Move"`
+	ReMove  []ReMove    `json:"ReMove"`
+	Add     []Add       `json:"Add"`
+	Bullets []RetBullet `json:"bullets"`
 }
 
 type RetTimeMsg struct {
@@ -70,4 +90,9 @@ type RetBullet struct {
 
 type RetOverMsg struct {
 	End bool `json:"end"`
+}
+
+type ReqMoveMsg struct {
+	Userid uint32
+	Direct uint32
 }

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"runtime/debug"
 	"sync"
@@ -20,45 +21,30 @@ type PlayerTask struct {
 	wstask *gonet.WebSocketTask
 
 	key        string
-	id         uint32
-	name       string
+	playerInfo *PlayerInfo
 	activetime time.Time
 	room       *Room
 	direct     uint32
-
-	scene *Scene
 }
 
 func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 	m := &PlayerTask{
-		wstask: gonet.NewWebSocketTask(conn),
-		scene: &Scene{
-			speed:   common.SceneSpeed,
-			hasMove: true,
-		},
+		wstask:     gonet.NewWebSocketTask(conn),
 		activetime: time.Now(),
+		playerInfo: &PlayerInfo{HP: 100},
 	}
-	m.scene.self.HP = common.FullHP
 	m.wstask.Derived = m
-
 	return m
 }
 
 func (this *PlayerTask) Start() {
-	this.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100 // 待优化
+	this.playerInfo.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100 // 待优化
+
+	fmt.Println("new playertask", this.playerInfo)
 	this.wstask.Start()
 	this.wstask.Verify() // 待优化
 	PlayerTaskMgr_GetMe().Add(this)
-
-	this.scene.self.Id = this.id
-
-	room, err := RoomMgr_GetMe().GetRoom(this)
-	if nil != err {
-		glog.Error("[roomserver] Allocate room fail ", err)
-		return
-	}
-
-	this.scene.room = room
+	RoomMgr_GetMe().GetRoom(this)
 }
 
 func (this *PlayerTask) Stop() bool {
@@ -71,7 +57,6 @@ func (this *PlayerTask) OnClose() {
 	PlayerTaskMgr_GetMe().Del(this)
 
 	this.room = nil
-	this.scene = nil
 }
 
 func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
@@ -81,6 +66,7 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 	msgtype := common.MsgType(uint16(data[2]) | uint16(data[3])<<8)
 	switch msgtype {
 	case common.MsgType_Token:
+
 	case common.MsgType_Move:
 
 		var angle uint32
@@ -98,16 +84,15 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 			return false
 		}
 		this.direct = angle
-
-		if nil == this.scene {
-			return false
+		req := common.ReqMoveMsg{
+			Userid: this.playerInfo.id,
+			Direct: angle,
 		}
+		this.room.opChan <- &opMsg{op: common.PlayerMove, args: req}
 
-		this.scene.UpdateSelfPos(angle)
-		this.scene.UpdateSpeed(common.SceneSpeed)
 	case common.MsgType_Shoot:
 
-		this.scene.addBullet(this.direct)
+		//this.scene.addBullet(this.direct)
 
 	case common.MsgType_Finsh:
 		this.room.Close()
@@ -123,34 +108,19 @@ func (this *PlayerTask) SendOverMsg() {
 	this.wstask.AsyncSend(bytes, 0)
 }
 
-func (this *PlayerTask) SendSceneMsg() bool {
-	if nil == this.scene {
-		return false
-	}
+func (this *PlayerTask) SendSceneMsg(msg *common.RetSceneMsg) bool {
+	// if nil == this.scene {
+	// 	return false
+	// }
 
-	msg := this.scene.SceneMsg()
-	if nil == msg {
-		glog.Error("[Scene] Msg Nil")
-		return false
-	}
-
-	return this.wstask.AsyncSend(msg, 0)
-}
-
-func (this *PlayerTask) Update() {
-	if nil == this.scene {
-		return
-	}
-
-	this.scene.UpdateSelfPos(this.direct)
-}
-
-func (this *PlayerTask) UpdateOthers() {
-	if nil == this.scene {
-		return
-	}
-
-	this.scene.UpdatePos()
+	// msg := this.scene.SceneMsg()
+	// if nil == msg {
+	// 	glog.Error("[Scene] Msg Nil")
+	// 	return false
+	// }
+	buf := &bytes.Buffer{}
+	binary.Write(buf, binary.LittleEndian, msg)
+	return this.wstask.AsyncSend(buf.Bytes(), 0)
 }
 
 type PlayerTaskMgr struct {
@@ -202,7 +172,7 @@ func (this *PlayerTaskMgr) iTimeAction() {
 					if !t.Stop() {
 						this.Del(t)
 					}
-					glog.Info("[Player] Connection timeout, player id=", t.id)
+					glog.Info("[Player] Connection timeout, player id=", t.playerInfo.id)
 				}
 				ptasks = ptasks[:0]
 			}
@@ -220,7 +190,7 @@ func (this *PlayerTaskMgr) Add(t *PlayerTask) bool {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
-	this.tasks[t.id] = t
+	this.tasks[t.playerInfo.id] = t
 
 	return true
 }
@@ -234,16 +204,16 @@ func (this *PlayerTaskMgr) Del(t *PlayerTask) bool {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
-	_t, ok := this.tasks[t.id]
+	_t, ok := this.tasks[t.playerInfo.id]
 	if !ok {
 		return false
 	}
 	if t != _t {
-		glog.Error("[WS] Player Task Manager Del Fail, ", t.id, ",", &t, ",", &_t)
+		glog.Error("[WS] Player Task Manager Del Fail, ", t.playerInfo.id, ",", &t, ",", &_t)
 		return false
 	}
 
-	delete(this.tasks, t.id)
+	delete(this.tasks, t.playerInfo.id)
 
 	return true
 }

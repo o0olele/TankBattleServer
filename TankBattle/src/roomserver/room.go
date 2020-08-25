@@ -5,7 +5,6 @@ import (
 	common "common"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -16,6 +15,11 @@ import (
 const (
 	MaxPlayerNum uint32 = 2
 )
+
+type opMsg struct {
+	op   uint32
+	args interface{}
+}
 
 //提供信息给roommgr管理房间
 type Room struct {
@@ -28,11 +32,14 @@ type Room struct {
 	timeloop    uint64
 	stopch      chan bool
 	Isstop      bool
-	totgametime uint64 //in second
-	allbullet   sync.Map
+	totgametime uint64   //in second
+	allbullet   sync.Map //----------
 	//allbullet   map[uint32]*common.Bullet
 	endchan     chan bool
-	bulletcount uint32
+	bulletcount uint32 //--------
+
+	scene  *Scene
+	opChan chan *opMsg
 }
 
 //返回给客户端的房间信息
@@ -44,7 +51,7 @@ type room struct {
 func (this *Room) AddPlayer(player *PlayerTask) error {
 	//this.mutex.Lock()
 	if this.checkPlayer(player) {
-		glog.Info("[Room] ", player.id, "玩家已经在[", this.id, "]房间里面了")
+		glog.Info("[Room] ", player.playerInfo.id, "玩家已经在[", this.id, "]房间里面了")
 		return nil
 	}
 	if this.curnum >= MaxPlayerNum {
@@ -52,8 +59,8 @@ func (this *Room) AddPlayer(player *PlayerTask) error {
 		return errors.New("room is full")
 	}
 	this.curnum++
-	this.players[player.id] = player
-	this.players[player.id].room = this
+	this.players[player.playerInfo.id] = player
+	this.players[player.playerInfo.id].room = this
 	//this.mutex.Unlock()
 	return nil
 }
@@ -69,6 +76,8 @@ func NewRoom(rtype, rid uint32) *Room {
 		endchan:  make(chan bool),
 		//allbullet:   make(map[uint32]*common.Bullet),
 		bulletcount: 1,
+		scene:       &Scene{},
+		opChan:      make(chan *opMsg, 500),
 	}
 	room.totgametime, _ = strconv.ParseUint(env.Get("room", "time"), 10, 64)
 	return room
@@ -87,6 +96,8 @@ func (this *Room) Start() {
 }
 
 func (this *Room) GameLoop() {
+
+	this.scene.Init(this)
 	timeTicker := time.NewTicker(time.Millisecond * 10)
 	stop := false
 	for !stop {
@@ -104,8 +115,8 @@ func (this *Room) GameLoop() {
 				this.update()
 
 			}
-			if this.timeloop%2 == 0 { //0.1s
-				this.sendRoomMsg()
+			if this.timeloop%10 == 0 { //0.1s
+				this.scene.sendRoomMsg()
 			}
 			if this.timeloop%100 == 0 { //1s
 				this.sendTime(this.totgametime - this.timeloop/100)
@@ -117,6 +128,10 @@ func (this *Room) GameLoop() {
 			if this.Isstop {
 				stop = true
 			}
+		case op := <-this.opChan:
+			this.scene.UpdateOP(op)
+		default:
+
 		}
 	}
 	this.Close()
@@ -132,16 +147,10 @@ func (this *Room) Close() {
 }
 
 func (this *Room) checkPlayer(player *PlayerTask) bool {
-	if _, ok := this.players[player.id]; !ok {
+	if _, ok := this.players[player.playerInfo.id]; !ok {
 		return false
 	}
 	return true
-}
-
-func (this *Room) sendRoomMsg() {
-	for _, p := range this.players {
-		p.SendSceneMsg()
-	}
 }
 
 func (this *Room) sendTime(t uint64) {
@@ -154,27 +163,26 @@ func (this *Room) sendTime(t uint64) {
 			glog.Error("[Time] marshal jsonMsg err")
 			return
 		}
-		fmt.Println(string(jstr))
 		p.wstask.AsyncSend(jstr, 0)
 	}
 }
 
 func (this *Room) update() {
-	for _, p := range this.players {
-		p.Update()
-	}
 
-	for _, p := range this.players {
-		p.UpdateOthers()
-	}
+	//this.scene.UpdateSpeed(common.SceneSpeed)
 
-	this.allbullet.Range(func(k, v interface{}) bool {
-		b, ok := v.(*common.Bullet)
-		if !ok {
-			return false
-		}
-		updateBulletPos(b, this.players)
-		return true
-	})
+	this.scene.UpdatePos()
+	// for _, p := range this.players {
+	// 	p.UpdateOthers()
+	// }
+
+	// this.allbullet.Range(func(k, v interface{}) bool {
+	// 	b, ok := v.(*common.Bullet)
+	// 	if !ok {
+	// 		return false
+	// 	}
+	// 	updateBulletPos(b, this.players)
+	// 	return true
+	// })
 
 }
