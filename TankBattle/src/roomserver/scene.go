@@ -133,7 +133,7 @@ func (this *Scene) UpdatePos() {
 
 		if math.Abs(user.scene.self.X-this.self.X) < common.SceneHeight/2 &&
 			math.Abs(user.scene.self.Y-this.self.Y) < common.SceneWidth/2 {
-			this.others = append(this.others, common.Stat{Id: user.id, X: user.scene.self.X, Y: user.scene.self.Y, HP: user.scene.self.HP})
+			this.others = append(this.others, common.Stat{Id: user.id, X: user.scene.self.X, Y: user.scene.self.Y, HP: user.scene.self.HP, Ag: user.angle})
 		} else {
 			this.outters = append(this.outters, user.id)
 		}

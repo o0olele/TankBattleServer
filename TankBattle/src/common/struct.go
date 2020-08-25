@@ -3,15 +3,16 @@ package common
 type MsgType uint16
 
 const (
-	MsgType_Token MsgType = 0
-	MsgType_Move  MsgType = 1
-	MsgType_Finsh MsgType = 2
-	MsgType_Shoot MsgType = 3
-	MsgType_Heart MsgType = 4
+	MsgType_Token  MsgType = 0
+	MsgType_Move   MsgType = 1
+	MsgType_Finsh  MsgType = 2
+	MsgType_Shoot  MsgType = 3
+	MsgType_Heart  MsgType = 4
+	MsgType_Direct MsgType = 5
 )
 
 const (
-	SceneSpeed  float64 = 0.2
+	SceneSpeed  float64 = 0.5
 	SceneWidth  float64 = 20
 	SceneHeight float64 = 20
 )
@@ -35,6 +36,7 @@ type Stat struct {
 	X  float64
 	Y  float64
 	HP uint32
+	Ag uint32
 }
 
 // 客户请求

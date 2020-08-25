@@ -25,6 +25,7 @@ type PlayerTask struct {
 	activetime time.Time
 	room       *Room
 	direct     uint32
+	angle      uint32
 
 	scene *Scene
 }
@@ -82,15 +83,13 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 	switch msgtype {
 	case common.MsgType_Token:
 	case common.MsgType_Move:
-
 		var angle uint32
 		err := binary.Read(bytes.NewReader(data[4:]), binary.LittleEndian, &angle)
 		if nil != err {
-			glog.Error("[WS] Endian Trans Fail")
+			glog.Error("[WS] Endian Trans Fail", data)
 			return false
 		}
 		glog.Info("[WS] Parse Msg Move ", angle)
-
 		if nil == this.room {
 			return false
 		}
@@ -106,13 +105,28 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		this.scene.UpdateSelfPos(angle)
 		this.scene.UpdateSpeed(common.SceneSpeed)
 	case common.MsgType_Shoot:
-
-		this.scene.addBullet(this.direct)
+		var angle uint32
+		err := binary.Read(bytes.NewReader(data[4:]), binary.LittleEndian, &angle)
+		if nil != err {
+			glog.Error("[WS] Endian Trans Fail")
+			return false
+		}
+		glog.Info("[WS] Parse Msg Move ", angle)
+		this.scene.addBullet(angle)
 
 	case common.MsgType_Finsh:
 		this.room.Close()
 	case common.MsgType_Heart:
 		this.wstask.AsyncSend(data, flag)
+	case common.MsgType_Direct:
+		var angle uint32
+		err := binary.Read(bytes.NewReader(data[4:]), binary.LittleEndian, &angle)
+		if nil != err {
+			glog.Error("[WS] Endian Trans Fail")
+			return false
+		}
+		//glog.Info("[WS] Parse Msg Direct ", angle)
+		this.angle = angle
 	default:
 	}
 	return true
