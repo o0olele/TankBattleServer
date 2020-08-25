@@ -118,9 +118,9 @@ func (this *PlayerTask) SendSceneMsg(msg *common.RetSceneMsg) bool {
 	// 	glog.Error("[Scene] Msg Nil")
 	// 	return false
 	// }
-	buf := &bytes.Buffer{}
-	binary.Write(buf, binary.LittleEndian, msg)
-	return this.wstask.AsyncSend(buf.Bytes(), 0)
+
+	buf, _ := json.Marshal(*msg)
+	return this.wstask.AsyncSend(buf, 0)
 }
 
 type PlayerTaskMgr struct {

@@ -183,6 +183,6 @@ func (this *ScenePlayer) sendSceneMsg() {
 	this.curflag = make(map[uint32]bool)
 	this.others = make(map[uint32]*PlayerTask)
 	//fmt.Println("------", this.self.playerInfo.id, "------")
-	fmt.Println("msg", msg)
+
 	this.self.SendSceneMsg(msg)
 }
