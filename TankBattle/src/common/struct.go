@@ -12,7 +12,7 @@ const (
 )
 const (
 	PlayerMove uint32 = 1
-	PlayerTure uint32 = 2
+	PlayerTurn uint32 = 2
 	AddBullet  uint32 = 3
 	BulletMove uint32 = 4
 )
@@ -98,6 +98,7 @@ type RetOverMsg struct {
 type ReqMoveMsg struct {
 	Userid uint32
 	Direct uint32
+	Power  uint32
 }
 type ReqTurnMsg struct {
 	Userid uint32

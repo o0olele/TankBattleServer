@@ -97,8 +97,9 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 	case common.MsgType_Heart:
 		this.wstask.AsyncSend(data, flag)
 	case common.MsgType_Direct:
-		var angle uint32
-		err := binary.Read(bytes.NewReader(data[4:]), binary.LittleEndian, &angle)
+		var angle, power uint32
+		err := binary.Read(bytes.NewReader(data[4:8]), binary.LittleEndian, &angle)
+		err = binary.Read(bytes.NewReader(data[8:]), binary.LittleEndian, &power)
 		if nil != err {
 			glog.Error("[WS] Endian Trans Fail")
 			return false
@@ -114,8 +115,9 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		req := common.ReqMoveMsg{
 			Userid: this.playerInfo.id,
 			Direct: angle,
+			Power:  power,
 		}
-		this.room.opChan <- &opMsg{op: common.PlayerTure, args: req}
+		this.room.opChan <- &opMsg{op: common.PlayerTurn, args: req}
 	default:
 	}
 	return true
@@ -138,7 +140,7 @@ func (this *PlayerTask) SendSceneMsg(msg *common.RetSceneMsg) bool {
 	// }
 
 	buf, _ := json.Marshal(*msg)
-	fmt.Println(string(buf))
+	//fmt.Println(string(buf))
 	return this.wstask.AsyncSend(buf, 0)
 }
 
