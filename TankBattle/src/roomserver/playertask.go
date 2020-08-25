@@ -24,7 +24,6 @@ type PlayerTask struct {
 	playerInfo *PlayerInfo
 	activetime time.Time
 	room       *Room
-	direct     uint32
 }
 
 func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
@@ -83,7 +82,6 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		if this.room.Isstop {
 			return false
 		}
-		this.direct = angle
 		req := common.ReqMoveMsg{
 			Userid: this.playerInfo.id,
 			Direct: angle,
@@ -98,6 +96,26 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		this.room.Close()
 	case common.MsgType_Heart:
 		this.wstask.AsyncSend(data, flag)
+	case common.MsgType_Direct:
+		var angle uint32
+		err := binary.Read(bytes.NewReader(data[4:]), binary.LittleEndian, &angle)
+		if nil != err {
+			glog.Error("[WS] Endian Trans Fail")
+			return false
+		}
+		glog.Info("[WS] Parse Msg Move ", angle)
+
+		if nil == this.room {
+			return false
+		}
+		if this.room.Isstop {
+			return false
+		}
+		req := common.ReqMoveMsg{
+			Userid: this.playerInfo.id,
+			Direct: angle,
+		}
+		this.room.opChan <- &opMsg{op: common.PlayerTure, args: req}
 	default:
 	}
 	return true
@@ -120,6 +138,7 @@ func (this *PlayerTask) SendSceneMsg(msg *common.RetSceneMsg) bool {
 	// }
 
 	buf, _ := json.Marshal(*msg)
+	fmt.Println(string(buf))
 	return this.wstask.AsyncSend(buf, 0)
 }
 

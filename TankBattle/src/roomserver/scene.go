@@ -69,13 +69,20 @@ func (this *Scene) sendRoomMsg() {
 }
 
 func (this *Scene) UpdateOP(op *opMsg) {
-	if op.op == common.PlayerMove {
+	switch op.op {
+	case common.PlayerMove:
 		atomic.StoreUint32(&this.hasMove, this.hasMove+1)
 		req, ok := op.args.(common.ReqMoveMsg)
 		if !ok {
 			glog.Info("[Move] move arg error")
 		}
 		this.players[req.Userid].UpdateSelfPos(req.Direct)
+	case common.PlayerTure:
+		req, ok := op.args.(common.ReqMoveMsg)
+		if !ok {
+			glog.Info("[Turn] turn arg error")
+		}
+		this.players[req.Userid].self.playerInfo.pos.Ag = req.Direct
 	}
 }
 

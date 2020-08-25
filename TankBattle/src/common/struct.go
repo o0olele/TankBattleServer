@@ -3,16 +3,18 @@ package common
 type MsgType uint16
 
 const (
-	MsgType_Token MsgType = 0
-	MsgType_Move  MsgType = 1
-	MsgType_Finsh MsgType = 2
-	MsgType_Shoot MsgType = 3
-	MsgType_Heart MsgType = 4
+	MsgType_Token  MsgType = 0
+	MsgType_Move   MsgType = 1
+	MsgType_Finsh  MsgType = 2
+	MsgType_Shoot  MsgType = 3
+	MsgType_Heart  MsgType = 4
+	MsgType_Direct MsgType = 5
 )
 const (
 	PlayerMove uint32 = 1
-	AddBullet  uint32 = 2
-	BulletMove uint32 = 3
+	PlayerTure uint32 = 2
+	AddBullet  uint32 = 3
+	BulletMove uint32 = 4
 )
 const (
 	SceneSpeed  float64 = 0.2
@@ -35,8 +37,9 @@ const (
 )
 
 type Pos struct {
-	X float64
-	Y float64
+	X  float64
+	Y  float64
+	Ag uint32
 }
 type Stat struct {
 	Pos Pos
@@ -93,6 +96,10 @@ type RetOverMsg struct {
 }
 
 type ReqMoveMsg struct {
+	Userid uint32
+	Direct uint32
+}
+type ReqTurnMsg struct {
 	Userid uint32
 	Direct uint32
 }
