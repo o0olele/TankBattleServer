@@ -46,16 +46,11 @@ type Stat struct {
 	HP  uint32
 }
 
-// 客户请求
-type ReqGetIDMsg struct {
-	DeviceId string `json:"deviceId"`
-	Ip       string `json:"ip"`
+type Token struct {
+	Id   uint32
+	Time int64
 }
 
-// 服务器返回
-type RetGetIDMsg struct {
-	Id uint32 `json:"id"`
-}
 type Bullet struct {
 	Id     uint32
 	Btype  uint32
@@ -76,6 +71,28 @@ type Add struct {
 	Pos    Pos
 	HP     uint32
 }
+
+// 客户请求
+type ReqGetIDMsg struct {
+	DeviceId string `json:"deviceId"`
+	Ip       string `json:"ip"`
+}
+
+type ReqMoveMsg struct {
+	Userid uint32
+	Direct uint32
+}
+type ReqTurnMsg struct {
+	Userid uint32
+	Direct uint32
+}
+
+// 服务器返回
+type RetGetIDMsg struct {
+	Id   uint32
+	Name string
+}
+
 type RetSceneMsg struct {
 	Move    []Move      `json:"Move"`
 	ReMove  []ReMove    `json:"ReMove"`
@@ -86,6 +103,7 @@ type RetSceneMsg struct {
 type RetTimeMsg struct {
 	Time uint64 `json:"time"`
 }
+
 type RetBullet struct {
 	Id  uint32
 	Pos Stat
@@ -95,11 +113,8 @@ type RetOverMsg struct {
 	End bool `json:"end"`
 }
 
-type ReqMoveMsg struct {
-	Userid uint32
-	Direct uint32
-}
-type ReqTurnMsg struct {
-	Userid uint32
-	Direct uint32
+type RetGetRoom struct {
+	Ip    string
+	Port  uint32
+	Token string
 }
