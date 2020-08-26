@@ -17,6 +17,7 @@
         "listen":":9001",
         "time":"120",
         "navmesh":"../../bin/all_tiles_navmesh.bin"
+        
     },
     "rcenter":{
         "log":"./log/log_rcenter1.log",

@@ -23,8 +23,9 @@ type Scene struct {
 func (this *Scene) Init(room *Room) {
 	this.room = room
 	this.players = make(map[uint32]*ScenePlayer)
+	mp := GenerateRandMap()
 	for _, p := range this.room.players {
-		this.players[p.id] = NewScenePlayer(p, this)
+		this.players[p.id] = NewScenePlayer(p, this, mp)
 	}
 }
 

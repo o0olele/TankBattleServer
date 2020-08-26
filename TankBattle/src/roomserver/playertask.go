@@ -162,6 +162,10 @@ func (this *PlayerTask) SendSceneMsg(msg *common.RetSceneMsg) bool {
 	buf, _ := json.Marshal(*msg)
 	return this.wstask.AsyncSend(buf, 0)
 }
+func (this *PlayerTask) SendMap(msg *common.RetObstacle) {
+	buf, _ := json.Marshal(*msg)
+	this.wstask.AsyncSend(buf, 0)
+}
 
 type PlayerTaskMgr struct {
 	mutex sync.RWMutex

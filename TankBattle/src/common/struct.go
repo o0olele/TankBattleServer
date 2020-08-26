@@ -133,3 +133,14 @@ type RetGetRoom struct {
 type RetYouDie struct {
 	Die bool
 }
+
+type Obstacle struct {
+	Pos    Pos
+	Length uint32
+	Width  uint32
+	Height uint32
+}
+
+type RetObstacle struct {
+	Obstacles map[uint32]Obstacle
+}

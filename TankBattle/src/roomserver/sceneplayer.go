@@ -33,7 +33,7 @@ type ScenePlayer struct {
 	shootreq *common.ReqShootMsg
 }
 
-func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
+func NewScenePlayer(player *PlayerTask, scene *Scene, mp *map[uint32]common.Obstacle) *ScenePlayer {
 	s := &ScenePlayer{
 		id:    player.id,
 		scene: scene,
@@ -52,6 +52,8 @@ func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
 		lastbullet: make(map[uint32]*common.Bullet),
 		curbullet:  make(map[uint32]*common.Bullet),
 	}
+
+	s.playerTask.SendMap(&common.RetObstacle{Obstacles: *mp})
 	return s
 }
 
@@ -154,7 +156,7 @@ func (this *ScenePlayer) UpdateSpeed() {
 func (this *ScenePlayer) UpdatePos() {
 
 	for _, user := range this.scene.players {
-		if user.self.id == this.self.id {
+		if user.self.id == this.self.id || user.self.HP == 0 {
 			continue
 		}
 		if math.Abs(user.self.pos.X-this.self.pos.X) < common.SceneHeight/2 &&
