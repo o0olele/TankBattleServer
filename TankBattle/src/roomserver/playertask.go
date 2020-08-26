@@ -38,8 +38,6 @@ func (this *PlayerTask) Start() {
 	//fmt.Println("new playertask", this.playerInfo)
 	this.wstask.Start()
 	this.wstask.Verify() // 待优化
-	PlayerTaskMgr_GetMe().Add(this)
-	RoomMgr_GetMe().GetRoom(this)
 }
 
 func (this *PlayerTask) Stop() bool {
@@ -81,6 +79,9 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		/*if time.Now().Unix()-token.Time < 30 {
 			this.wstask.Verify()
 		}*/
+
+		RoomMgr_GetMe().GetRoom(this)
+		PlayerTaskMgr_GetMe().Add(this)
 	case common.MsgType_Move:
 
 		var angle uint32
