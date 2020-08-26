@@ -34,10 +34,7 @@ func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 }
 
 func (this *PlayerTask) Start() {
-	//this.playerInfo.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100 // 待优化
-	//fmt.Println("new playertask", this.playerInfo)
 	this.wstask.Start()
-	this.wstask.Verify() // 待优化
 }
 
 func (this *PlayerTask) Stop() bool {
@@ -76,14 +73,15 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		}
 		glog.Info("[room] decrypt openssl token ", token.Id, token.Time, time.Now().Unix())
 
-		if time.Now().Unix()-token.Time < 30 {
-			this.wstask.Verify()
+		if time.Now().Unix()-token.Time > 30 {
+			glog.Error("[room] player verify fail")
+			return false
 		}
 
+		this.wstask.Verify()
 		PlayerTaskMgr_GetMe().Add(this)
 		RoomMgr_GetMe().GetRoom(this)
 	case common.MsgType_Move:
-
 		var angle uint32
 		err := binary.Read(bytes.NewReader(data[4:]), binary.LittleEndian, &angle)
 		if nil != err {
