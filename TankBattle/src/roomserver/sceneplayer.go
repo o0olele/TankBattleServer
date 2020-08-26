@@ -11,9 +11,8 @@ type ScenePlayer struct {
 	self       *PlayerInfo //玩家个人信息
 	playerTask *PlayerTask
 	scene      *Scene
-	//others   map[uint32]*PlayerTask
-	curflag  map[uint32]*ScenePlayer
-	lastflag map[uint32]*ScenePlayer
+	curflag    map[uint32]*ScenePlayer
+	lastflag   map[uint32]*ScenePlayer
 
 	isMove bool
 	next   common.Pos
@@ -22,6 +21,7 @@ type ScenePlayer struct {
 	drag   float64
 
 	movereq  *common.ReqMoveMsg
+	turnreq  *common.ReqTurnMsg
 	shootreq *common.ReqShootMsg
 }
 
@@ -146,11 +146,18 @@ func (this *ScenePlayer) UpdatePos() {
 }
 
 func (this *ScenePlayer) DoMove() {
-	this.CaculateNext(this.movereq.Direct, this.movereq.Power)
-	this.self.pos = this.next
-	this.isMove = true
 
-	//this.
+	if this.movereq != nil {
+		this.CaculateNext(this.movereq.Direct, this.movereq.Power)
+		this.self.pos = this.next
+		this.isMove = true
+		this.movereq = nil
+	}
+	if this.turnreq != nil {
+		this.self.pos.Ag = this.turnreq.Direct
+		this.turnreq = nil
+		this.isMove = true
+	}
 }
 
 func (this *ScenePlayer) sendSceneMsg() {
@@ -208,4 +215,5 @@ func (this *ScenePlayer) sendSceneMsg() {
 	this.lastflag = this.curflag
 	this.curflag = make(map[uint32]*ScenePlayer)
 	this.playerTask.SendSceneMsg(msg)
+	this.isMove = false
 }

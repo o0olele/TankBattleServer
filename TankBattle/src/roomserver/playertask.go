@@ -113,9 +113,8 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 	case common.MsgType_Heart:
 		//this.wstask.AsyncSend(data, flag)
 	case common.MsgType_Direct:
-		var angle, power uint32
+		var angle uint32
 		err := binary.Read(bytes.NewReader(data[4:8]), binary.LittleEndian, &angle)
-		err = binary.Read(bytes.NewReader(data[8:]), binary.LittleEndian, &power)
 		if nil != err {
 			glog.Error("[WS] Endian Trans Fail")
 			return false
@@ -128,10 +127,9 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		if this.room.Isstop {
 			return false
 		}
-		req := common.ReqMoveMsg{
+		req := common.ReqTurnMsg{
 			Userid: this.id,
 			Direct: angle,
-			Power:  power,
 		}
 		this.room.opChan <- &opMsg{op: common.PlayerTurn, args: req}
 	default:

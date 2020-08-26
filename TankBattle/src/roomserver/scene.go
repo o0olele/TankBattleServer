@@ -73,12 +73,12 @@ func (this *Scene) UpdateOP(op *opMsg) {
 		//this.players[req.Userid].UpdateSelfPos(req.Direct)
 		// angle = xxx  speed = power
 	case common.PlayerTurn:
-		req, ok := op.args.(common.ReqMoveMsg)
+		req, ok := op.args.(common.ReqTurnMsg)
 		if !ok {
 			glog.Info("[Turn] turn arg error")
 			return
 		}
-		this.players[req.Userid].self.pos.Ag = req.Direct
+		this.players[req.Userid].turnreq = &req
 	case common.AddBullet:
 		req, ok := op.args.(common.ReqShootMsg)
 		if !ok {
