@@ -38,6 +38,8 @@ func (this *PlayerTask) Start() {
 	//fmt.Println("new playertask", this.playerInfo)
 	this.wstask.Start()
 	this.wstask.Verify() // 待优化
+	PlayerTaskMgr_GetMe().Add(this)
+	RoomMgr_GetMe().GetRoom(this)
 }
 
 func (this *PlayerTask) Stop() bool {
@@ -78,10 +80,14 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 
 		/*if time.Now().Unix()-token.Time < 30 {
 			this.wstask.Verify()
-		}*/
+<<<<<<< HEAD
+		}
 
 		RoomMgr_GetMe().GetRoom(this)
 		PlayerTaskMgr_GetMe().Add(this)
+=======
+		}*/
+>>>>>>> e930c232134471cfb2ab8a5f67851dfdd55af561
 	case common.MsgType_Move:
 
 		var angle uint32
@@ -99,7 +105,7 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 			return false
 		}
 		req := common.ReqMoveMsg{
-			Userid: this.self.self.id,
+			Userid: this.id,
 			Direct: angle,
 		}
 		this.room.opChan <- &opMsg{op: common.PlayerMove, args: req}
@@ -129,7 +135,7 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 			return false
 		}
 		req := common.ReqMoveMsg{
-			Userid: this.self.self.id,
+			Userid: this.id,
 			Direct: angle,
 			Power:  power,
 		}
@@ -209,7 +215,7 @@ func (this *PlayerTaskMgr) iTimeAction() {
 					if !t.Stop() {
 						this.Del(t)
 					}
-					glog.Info("[Player] Connection timeout, player id=", t.self.self.id)
+					glog.Info("[Player] Connection timeout, player id=", t.id)
 				}
 				ptasks = ptasks[:0]
 			}
@@ -227,7 +233,7 @@ func (this *PlayerTaskMgr) Add(t *PlayerTask) bool {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
-	this.tasks[t.self.self.id] = t
+	this.tasks[t.id] = t
 
 	return true
 }
@@ -241,12 +247,12 @@ func (this *PlayerTaskMgr) Del(t *PlayerTask) bool {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
-	_t, ok := this.tasks[t.self.self.id]
+	_t, ok := this.tasks[t.id]
 	if !ok {
 		return false
 	}
 	if t != _t {
-		glog.Error("[WS] Player Task Manager Del Fail, ", t.self.self.id, ",", &t, ",", &_t)
+		glog.Error("[WS] Player Task Manager Del Fail, ", t.id, ",", &t, ",", &_t)
 		return false
 	}
 
