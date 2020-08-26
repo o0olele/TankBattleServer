@@ -34,19 +34,10 @@ func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 }
 
 func (this *PlayerTask) Start() {
-<<<<<<< HEAD
 	//this.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100 // 待优化
 
 	this.wstask.Start()
 	//this.wstask.Verify() // 待优化
-=======
-	//this.playerInfo.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100 // 待优化
-	//fmt.Println("new playertask", this.playerInfo)
-	this.wstask.Start()
-	this.wstask.Verify() // 待优化
-	PlayerTaskMgr_GetMe().Add(this)
-	RoomMgr_GetMe().GetRoom(this)
->>>>>>> e930c232134471cfb2ab8a5f67851dfdd55af561
 }
 
 func (this *PlayerTask) Stop() bool {
@@ -85,16 +76,12 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		}
 		glog.Info("[room] decrypt openssl token ", token.Id, token.Time, time.Now().Unix())
 
-		/*if time.Now().Unix()-token.Time < 30 {
+		if time.Now().Unix()-token.Time < 30 {
 			this.wstask.Verify()
-<<<<<<< HEAD
 		}
 
 		RoomMgr_GetMe().GetRoom(this)
 		PlayerTaskMgr_GetMe().Add(this)
-=======
-		}*/
->>>>>>> e930c232134471cfb2ab8a5f67851dfdd55af561
 	case common.MsgType_Move:
 
 		var angle uint32
