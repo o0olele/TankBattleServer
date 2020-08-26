@@ -102,16 +102,20 @@ type RetSceneMsg struct {
 	Move    []Move
 	ReMove  []ReMove
 	Add     []Add
-	Bullets []RetBullet
+	Bullets RetBulletMsg
 }
 
 type RetTimeMsg struct {
 	Time uint64
 }
-
+type RetBulletMsg struct {
+	Move   []RetBullet
+	ReMove []uint32
+	Add    []RetBullet
+}
 type RetBullet struct {
 	Id  uint32
-	Pos Stat
+	Pos Pos
 }
 
 type RetOverMsg struct {
