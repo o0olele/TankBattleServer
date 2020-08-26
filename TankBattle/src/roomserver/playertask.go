@@ -82,8 +82,9 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		PlayerTaskMgr_GetMe().Add(this)
 		RoomMgr_GetMe().GetRoom(this)
 	case common.MsgType_Move:
-		var angle uint32
+		var angle, power uint32
 		err := binary.Read(bytes.NewReader(data[4:]), binary.LittleEndian, &angle)
+		err = binary.Read(bytes.NewReader(data[8:]), binary.LittleEndian, &power)
 		if nil != err {
 			glog.Error("[WS] Endian Trans Fail")
 			return false
@@ -99,6 +100,7 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		req := common.ReqMoveMsg{
 			Userid: this.id,
 			Direct: angle,
+			Power:  power,
 		}
 		this.room.opChan <- &opMsg{op: common.PlayerMove, args: req}
 
