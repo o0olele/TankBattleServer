@@ -105,7 +105,18 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		this.room.opChan <- &opMsg{op: common.PlayerMove, args: req}
 
 	case common.MsgType_Shoot:
-
+		var angle uint32
+		err := binary.Read(bytes.NewReader(data[4:]), binary.LittleEndian, &angle)
+		if nil != err {
+			glog.Error("[WS] Endian Trans Fail")
+			return false
+		}
+		glog.Info("[WS] Parse Msg shoot ", angle)
+		req := common.ReqShootMsg{
+			Userid: this.id,
+			Direct: angle,
+		}
+		this.room.opChan <- &opMsg{op: common.AddBullet, args: req}
 		//this.scene.addBullet(this.direct)
 
 	case common.MsgType_Finsh:
@@ -119,7 +130,7 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 			glog.Error("[WS] Endian Trans Fail")
 			return false
 		}
-		glog.Info("[WS] Parse Msg Move ", angle)
+		glog.Info("[WS] Parse Msg Turn ", angle)
 
 		if nil == this.room {
 			return false
