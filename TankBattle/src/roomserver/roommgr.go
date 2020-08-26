@@ -57,10 +57,7 @@ func (this *RoomMgr) GetRoom(player *PlayerTask) (*Room, error) {
 		rid := this.getNextRoomid()
 		room = NewRoom(common.CommonRoom, rid)
 		if !room.IsFull() {
-			fmt.Println("push")
 			this.unFullRoom.Push(room)
-			r, err := this.unFullRoom.Front().(*Room)
-			fmt.Println("pu", r, err)
 		}
 		this.Load++
 	}
@@ -75,8 +72,6 @@ func (this *RoomMgr) GetRoom(player *PlayerTask) (*Room, error) {
 		fmt.Println("gamestart")
 		this.runRoom[room.id] = room
 		this.unFullRoom.Pop()
-		r, err := this.unFullRoom.Front().(*Room)
-		fmt.Println("after pop:", r, err)
 		go room.Start()
 	}
 	return room, nil

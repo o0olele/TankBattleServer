@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"runtime/debug"
 	"sync"
@@ -18,10 +17,10 @@ import (
 )
 
 type PlayerTask struct {
-	wstask *gonet.WebSocketTask
-
+	id         uint32
+	wstask     *gonet.WebSocketTask
+	self       *ScenePlayer
 	key        string
-	playerInfo *PlayerInfo
 	activetime time.Time
 	room       *Room
 }
@@ -30,16 +29,14 @@ func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 	m := &PlayerTask{
 		wstask:     gonet.NewWebSocketTask(conn),
 		activetime: time.Now(),
-		playerInfo: &PlayerInfo{HP: 100},
 	}
 	m.wstask.Derived = m
 	return m
 }
 
 func (this *PlayerTask) Start() {
-	this.playerInfo.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100 // 待优化
+	this.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100 // 待优化
 
-	fmt.Println("new playertask", this.playerInfo)
 	this.wstask.Start()
 	this.wstask.Verify() // 待优化
 	PlayerTaskMgr_GetMe().Add(this)
@@ -83,7 +80,7 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 			return false
 		}
 		req := common.ReqMoveMsg{
-			Userid: this.playerInfo.id,
+			Userid: this.self.self.id,
 			Direct: angle,
 		}
 		this.room.opChan <- &opMsg{op: common.PlayerMove, args: req}
@@ -113,7 +110,7 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 			return false
 		}
 		req := common.ReqMoveMsg{
-			Userid: this.playerInfo.id,
+			Userid: this.self.self.id,
 			Direct: angle,
 			Power:  power,
 		}
@@ -193,7 +190,7 @@ func (this *PlayerTaskMgr) iTimeAction() {
 					if !t.Stop() {
 						this.Del(t)
 					}
-					glog.Info("[Player] Connection timeout, player id=", t.playerInfo.id)
+					glog.Info("[Player] Connection timeout, player id=", t.self.self.id)
 				}
 				ptasks = ptasks[:0]
 			}
@@ -211,7 +208,7 @@ func (this *PlayerTaskMgr) Add(t *PlayerTask) bool {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
-	this.tasks[t.playerInfo.id] = t
+	this.tasks[t.self.self.id] = t
 
 	return true
 }
@@ -225,16 +222,16 @@ func (this *PlayerTaskMgr) Del(t *PlayerTask) bool {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
-	_t, ok := this.tasks[t.playerInfo.id]
+	_t, ok := this.tasks[t.self.self.id]
 	if !ok {
 		return false
 	}
 	if t != _t {
-		glog.Error("[WS] Player Task Manager Del Fail, ", t.playerInfo.id, ",", &t, ",", &_t)
+		glog.Error("[WS] Player Task Manager Del Fail, ", t.self.self.id, ",", &t, ",", &_t)
 		return false
 	}
 
-	delete(this.tasks, t.playerInfo.id)
+	delete(this.tasks, t.self.self.id)
 
 	return true
 }

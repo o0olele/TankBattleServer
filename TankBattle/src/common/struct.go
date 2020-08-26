@@ -54,7 +54,7 @@ type Token struct {
 type Bullet struct {
 	Id     uint32
 	Btype  uint32
-	Pos    Stat
+	Pos    Pos
 	Direct uint32
 	Time   int64
 }
@@ -84,6 +84,10 @@ type ReqMoveMsg struct {
 	Power  uint32
 }
 type ReqTurnMsg struct {
+	Userid uint32
+	Direct uint32
+}
+type ReqShootMsg struct {
 	Userid uint32
 	Direct uint32
 }
