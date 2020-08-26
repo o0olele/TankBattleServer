@@ -38,8 +38,6 @@ func (this *PlayerTask) Start() {
 	//fmt.Println("new playertask", this.playerInfo)
 	this.wstask.Start()
 	this.wstask.Verify() // 待优化
-	PlayerTaskMgr_GetMe().Add(this)
-	RoomMgr_GetMe().GetRoom(this)
 }
 
 func (this *PlayerTask) Stop() bool {
@@ -78,16 +76,12 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		}
 		glog.Info("[room] decrypt openssl token ", token.Id, token.Time, time.Now().Unix())
 
-		/*if time.Now().Unix()-token.Time < 30 {
+		if time.Now().Unix()-token.Time < 30 {
 			this.wstask.Verify()
-<<<<<<< HEAD
 		}
 
-		RoomMgr_GetMe().GetRoom(this)
 		PlayerTaskMgr_GetMe().Add(this)
-=======
-		}*/
->>>>>>> e930c232134471cfb2ab8a5f67851dfdd55af561
+		RoomMgr_GetMe().GetRoom(this)
 	case common.MsgType_Move:
 
 		var angle uint32
@@ -119,9 +113,8 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 	case common.MsgType_Heart:
 		//this.wstask.AsyncSend(data, flag)
 	case common.MsgType_Direct:
-		var angle, power uint32
+		var angle uint32
 		err := binary.Read(bytes.NewReader(data[4:8]), binary.LittleEndian, &angle)
-		err = binary.Read(bytes.NewReader(data[8:]), binary.LittleEndian, &power)
 		if nil != err {
 			glog.Error("[WS] Endian Trans Fail")
 			return false
@@ -137,7 +130,6 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		req := common.ReqMoveMsg{
 			Userid: this.id,
 			Direct: angle,
-			Power:  power,
 		}
 		this.room.opChan <- &opMsg{op: common.PlayerTurn, args: req}
 	default:
@@ -256,7 +248,7 @@ func (this *PlayerTaskMgr) Del(t *PlayerTask) bool {
 		return false
 	}
 
-	delete(this.tasks, t.self.self.id)
+	delete(this.tasks, t.id)
 
 	return true
 }

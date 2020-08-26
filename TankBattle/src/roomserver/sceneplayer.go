@@ -146,6 +146,9 @@ func (this *ScenePlayer) UpdatePos() {
 }
 
 func (this *ScenePlayer) DoMove() {
+	if this.movereq == nil {
+		return
+	}
 	this.CaculateNext(this.movereq.Direct, this.movereq.Power)
 	this.self.pos = this.next
 	this.isMove = true
