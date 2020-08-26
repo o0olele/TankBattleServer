@@ -14,12 +14,14 @@ import (
 	"github.com/rs/cors"
 )
 
+// /getname?Id=xxx
 func GetNameHandler(w http.ResponseWriter, r *http.Request) {
-	randName := "NickName" + GetDateFormat()
+	randName := "YoRHa" + GetDateFormat()
 
 	fmt.Fprintf(w, randName)
 }
 
+// /getid?DeviceId=xxx&Ip=xxx
 func GetIDHandler(w http.ResponseWriter, r *http.Request) {
 	msg := common.ReqGetIDMsg{
 		DeviceId: r.FormValue("DeviceId"),
@@ -35,7 +37,8 @@ func GetIDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = json.NewEncoder(w).Encode(&common.RetGetIDMsg{
-		Id: id,
+		Id:   id,
+		Name: "YoRHa",
 	})
 	if nil != err {
 		glog.Error("[login] Return id Fail ", err)
@@ -50,14 +53,35 @@ func GetIDHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// /getroom?Id=xxx
 func GetRoomHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.FormValue("Id"))
+	if nil != err {
+		glog.Error("[logic] get/parse user id fail ", err)
+		return
+	}
+
 	info, err := GetVailabelRoomInfo("token")
 	if nil != err {
 		glog.Error("[logic] RPC get room info fail ", err)
 		return
 	}
+	bytes, err := json.Marshal(common.Token{
+		Id:   uint32(id),
+		Time: time.Now().Unix(),
+	})
 
-	fmt.Fprintf(w, strconv.Itoa(int(info.Port)))
+	token := common.GetToken(string(bytes))
+
+	err = json.NewEncoder(w).Encode(&common.RetGetRoom{
+		Ip:    "0.0.0.0",
+		Port:  info.Port,
+		Token: token,
+	})
+	if nil != err {
+		glog.Error("[logic] return room info fail ", err)
+		return
+	}
 }
 
 // 时间戳转年月日 时分秒
