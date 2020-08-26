@@ -59,23 +59,23 @@ type Bullet struct {
 	Time   int64
 }
 type Move struct {
-	Userid uint32 `json:"userid"`
+	Userid uint32
 	Pos    Pos
 	HP     uint32
 }
 type ReMove struct {
-	Userid uint32 `json:"userid"`
+	Userid uint32
 }
 type Add struct {
-	Userid uint32 `json:"userid"`
+	Userid uint32
 	Pos    Pos
 	HP     uint32
 }
 
 // 客户请求
 type ReqGetIDMsg struct {
-	DeviceId string `json:"deviceId"`
-	Ip       string `json:"ip"`
+	DeviceId string
+	Ip       string
 }
 
 type ReqMoveMsg struct {
@@ -99,14 +99,14 @@ type RetGetIDMsg struct {
 }
 
 type RetSceneMsg struct {
-	Move    []Move      `json:"Move"`
-	ReMove  []ReMove    `json:"ReMove"`
-	Add     []Add       `json:"Add"`
-	Bullets []RetBullet `json:"bullets"`
+	Move    []Move
+	ReMove  []ReMove
+	Add     []Add
+	Bullets []RetBullet
 }
 
 type RetTimeMsg struct {
-	Time uint64 `json:"time"`
+	Time uint64
 }
 
 type RetBullet struct {
@@ -115,7 +115,7 @@ type RetBullet struct {
 }
 
 type RetOverMsg struct {
-	End bool `json:"end"`
+	End bool
 }
 
 type RetGetRoom struct {
