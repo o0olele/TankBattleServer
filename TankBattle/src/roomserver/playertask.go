@@ -38,7 +38,7 @@ func (this *PlayerTask) Start() {
 	this.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100 // 待优化
 
 	this.wstask.Start()
-	this.wstask.Verify() // 待优化
+	//this.wstask.Verify() // 待优化
 	PlayerTaskMgr_GetMe().Add(this)
 	RoomMgr_GetMe().GetRoom(this)
 }
@@ -62,7 +62,26 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 	msgtype := common.MsgType(uint16(data[2]) | uint16(data[3])<<8)
 	switch msgtype {
 	case common.MsgType_Token:
+		glog.Info("[room] Recv Token Msg ", data[4:])
+		var id uint32
+		err := binary.Read(bytes.NewReader(data[4:8]), binary.LittleEndian, &id)
+		if nil != err {
+			glog.Error("[WS] Endian Trans Fail")
+			return false
+		}
+		this.id = id
 
+		var token *common.Token
+		token, err = common.DecryptTokenSSL(string(data[8:]))
+		if nil != err {
+			glog.Error("[room] decrypt openssl token fail ", err)
+			return false
+		}
+		glog.Info("[room] decrypt openssl token ", token.Id, token.Time)
+
+		if time.Now().Unix()-token.Time < 30 {
+			this.wstask.Verify()
+		}
 	case common.MsgType_Move:
 
 		var angle uint32

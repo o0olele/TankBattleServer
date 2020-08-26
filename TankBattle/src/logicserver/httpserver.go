@@ -71,7 +71,11 @@ func GetRoomHandler(w http.ResponseWriter, r *http.Request) {
 		Time: time.Now().Unix(),
 	})
 
-	token := common.GetToken(string(bytes))
+	token, err := common.GetTokenSSL(bytes)
+	if nil != err {
+		glog.Error("[logic] get openssl token fail ", err)
+		return
+	}
 
 	err = json.NewEncoder(w).Encode(&common.RetGetRoom{
 		Ip:    "0.0.0.0",
@@ -82,6 +86,7 @@ func GetRoomHandler(w http.ResponseWriter, r *http.Request) {
 		glog.Error("[logic] return room info fail ", err)
 		return
 	}
+	glog.Info("[logic] token ", token)
 }
 
 // 时间戳转年月日 时分秒
