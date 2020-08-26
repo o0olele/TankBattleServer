@@ -7,9 +7,10 @@ import (
 )
 
 type ScenePlayer struct {
-	id    uint32 //玩家id
-	self  *PlayerTask
-	scene *Scene
+	id         uint32      //玩家id
+	self       *PlayerInfo //玩家个人信息
+	playerTask *PlayerTask
+	scene      *Scene
 	//others   map[uint32]*PlayerTask
 	curflag  map[uint32]*ScenePlayer
 	lastflag map[uint32]*ScenePlayer
@@ -20,45 +21,50 @@ type ScenePlayer struct {
 	speed  float64
 	drag   float64
 
-	movereq common.ReqMoveMsg
+	movereq  *common.ReqMoveMsg
+	shootreq *common.ReqShootMsg
 }
 
-func NewScenePlayer(udata *PlayerTask, scene *Scene) *ScenePlayer {
+func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
 	s := &ScenePlayer{
-		id:    udata.playerInfo.id,
+		id:    player.id,
 		scene: scene,
-		self:  udata,
+		self: &PlayerInfo{
+			id: player.id,
+			HP: 100,
+		},
+		playerTask: player,
 		//others:   make(map[uint32]*PlayerTask),
 		curflag:  make(map[uint32]*ScenePlayer),
 		lastflag: make(map[uint32]*ScenePlayer),
 		speed:    1,
 		drag:     0.1,
 	}
-	s.self.playerInfo = udata.playerInfo
 	return s
 }
 
 func (this *ScenePlayer) CaculateNext(direct uint32, power uint32) {
 	this.speed = float64(power)
-	this.next.X = this.self.playerInfo.pos.X + math.Sin(float64(direct)*math.Pi/180)*this.speed
-	this.next.Y = this.self.playerInfo.pos.Y + math.Cos(float64(direct)*math.Pi/180)*this.speed
+	this.next.X = this.self.pos.X + math.Sin(float64(direct)*math.Pi/180)*this.speed
+	this.next.Y = this.self.pos.Y + math.Cos(float64(direct)*math.Pi/180)*this.speed
 	this.UpdateSpeed(this.speed)
 }
 
-// //发射子弹
+//发射子弹
 // func (this *ScenePlayer) addBullet(direct uint32) {
-// 	initpos := this.self.playerInfo.pos
-// 	this.room.allbullet.Store(this.room.bulletcount, &common.Bullet{
-// 		Id:     this.room.bulletcount,
-// 		Btype:  this.self.Id,
+// 	initpos := this.self.pos
+// 	this.scene.bullets[this.scene.bulletnum] = &common.Bullet{
+// 		Id:     this.scene.bulletnum,
+// 		Btype:  this.id,
 // 		Pos:    initpos,
 // 		Direct: direct,
 // 		Time:   time.Now().Unix(),
-// 	})
-// 	atomic.StoreUint32(&this.room.bulletcount, this.room.bulletcount+1)
+// 	}
+
+// 	this.scene.bulletnum++
 // }
 
-// func updateBulletPos(bullet *common.Bullet, players map[uint32]*PlayerTask) {
+// func (this *ScenePlayer) updateBulletPos(bullet *common.Bullet) {
 // 	angle := bullet.Direct
 // 	last := *bullet
 // 	bullet.Pos.X += math.Sin(float64(angle)*math.Pi/180) * common.BulletSpeed
@@ -74,14 +80,14 @@ func (this *ScenePlayer) CaculateNext(direct uint32, power uint32) {
 // 	}
 // }
 
-// func beshoot(last, next *common.Bullet, player *PlayerTask) bool {
-// 	if player.scene == nil || last.Btype == player.scene.self.Id {
+// func (this *ScenePlayer) beshoot(last, next *common.Bullet) bool {
+// 	if last.Btype == this.id {
 // 		return false
 // 	}
 // 	ndot := common.Dot{X: next.Pos.X, Y: next.Pos.Y}
 // 	ldot := common.Dot{X: last.Pos.X, Y: last.Pos.Y}
 
-// 	pdot := common.Dot{X: player.scene.self.X, Y: player.scene.self.Y}
+// 	pdot := common.Dot{X: player.self.X, Y: player.self.Y}
 // 	if common.GetDDDistance(ndot, pdot) < common.PlayerSize {
 // 		return true
 // 	}
@@ -94,7 +100,7 @@ func (this *ScenePlayer) CaculateNext(direct uint32, power uint32) {
 // 	return false
 // }
 
-// //获取视野内的子弹
+//获取视野内的子弹
 // func (this *ScenePlayer) getBullet() {
 // 	this.bullets = []*common.RetBullet{}
 
@@ -127,11 +133,11 @@ func (this *ScenePlayer) UpdateSpeed(s float64) {
 func (this *ScenePlayer) UpdatePos() {
 
 	for _, user := range this.scene.players {
-		if user.self.playerInfo.id == this.self.playerInfo.id {
+		if user.self.id == this.self.id {
 			continue
 		}
-		if math.Abs(user.self.playerInfo.pos.X-this.self.playerInfo.pos.X) < common.SceneHeight/2 &&
-			math.Abs(user.self.playerInfo.pos.Y-this.self.playerInfo.pos.Y) < common.SceneWidth/2 {
+		if math.Abs(user.self.pos.X-this.self.pos.X) < common.SceneHeight/2 &&
+			math.Abs(user.self.pos.Y-this.self.pos.Y) < common.SceneWidth/2 {
 			this.curflag[user.id] = user
 			//this.others[user.id] = user.self
 			//fmt.Println("add others", this.self.playerInfo.id, this.others[user.id].playerInfo)
@@ -139,11 +145,12 @@ func (this *ScenePlayer) UpdatePos() {
 	}
 }
 
-//处理自己的移动
 func (this *ScenePlayer) DoMove() {
 	this.CaculateNext(this.movereq.Direct, this.movereq.Power)
-	this.self.playerInfo.pos = this.next
+	this.self.pos = this.next
 	this.isMove = true
+
+	//this.
 }
 
 func (this *ScenePlayer) sendSceneMsg() {
@@ -157,14 +164,14 @@ func (this *ScenePlayer) sendSceneMsg() {
 	fmt.Println("--------", this.id, "---------")
 	msg.Move = append(msg.Move, common.Move{
 		Userid: this.id,
-		Pos:    this.self.playerInfo.pos,
-		HP:     this.self.playerInfo.HP,
+		Pos:    this.self.pos,
+		HP:     this.self.HP,
 	})
 	for k, v := range this.lastflag {
-		fmt.Println(k, v.self.playerInfo.pos)
+		fmt.Println(k, v.self.pos)
 	}
 	for k, v := range this.curflag {
-		fmt.Println(k, v.self.playerInfo.pos)
+		fmt.Println(k, v.self.pos)
 	}
 	for id := range this.lastflag {
 		//上一次存在，这次不存在，remove
@@ -179,8 +186,8 @@ func (this *ScenePlayer) sendSceneMsg() {
 			if this.curflag[id].isMove {
 				msg.Move = append(msg.Move, common.Move{
 					Userid: id,
-					Pos:    this.curflag[id].self.playerInfo.pos,
-					HP:     this.curflag[id].self.playerInfo.HP,
+					Pos:    this.curflag[id].self.pos,
+					HP:     this.curflag[id].self.HP,
 				})
 			}
 
@@ -193,12 +200,12 @@ func (this *ScenePlayer) sendSceneMsg() {
 			fmt.Println("add")
 			msg.Add = append(msg.Add, common.Add{
 				Userid: id,
-				Pos:    this.curflag[id].self.playerInfo.pos,
-				HP:     this.curflag[id].self.playerInfo.HP,
+				Pos:    this.curflag[id].self.pos,
+				HP:     this.curflag[id].self.HP,
 			})
 		}
 	}
 	this.lastflag = this.curflag
 	this.curflag = make(map[uint32]*ScenePlayer)
-	this.self.SendSceneMsg(msg)
+	this.playerTask.SendSceneMsg(msg)
 }

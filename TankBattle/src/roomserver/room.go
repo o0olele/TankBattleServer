@@ -51,7 +51,7 @@ type room struct {
 func (this *Room) AddPlayer(player *PlayerTask) error {
 	//this.mutex.Lock()
 	if this.checkPlayer(player) {
-		glog.Info("[Room] ", player.playerInfo.id, "玩家已经在[", this.id, "]房间里面了")
+		//glog.Info("[Room] ", player.playerInfo.id, "玩家已经在[", this.id, "]房间里面了")
 		return nil
 	}
 	if this.curnum >= MaxPlayerNum {
@@ -59,8 +59,8 @@ func (this *Room) AddPlayer(player *PlayerTask) error {
 		return errors.New("room is full")
 	}
 	this.curnum++
-	this.players[player.playerInfo.id] = player
-	this.players[player.playerInfo.id].room = this
+	this.players[player.id] = player
+	this.players[player.id].room = this
 	//this.mutex.Unlock()
 	return nil
 }
@@ -146,7 +146,7 @@ func (this *Room) Close() {
 }
 
 func (this *Room) checkPlayer(player *PlayerTask) bool {
-	if _, ok := this.players[player.playerInfo.id]; !ok {
+	if _, ok := this.players[player.id]; !ok {
 		return false
 	}
 	return true
