@@ -37,10 +37,9 @@ func NewPlayerTask(conn *websocket.Conn) *PlayerTask {
 
 func (this *PlayerTask) Start() {
 	//this.playerInfo.id = rand.New(rand.NewSource(time.Now().UnixNano())).Uint32() % 100 // 待优化
-
 	fmt.Println("new playertask", this.playerInfo)
 	this.wstask.Start()
-	//this.wstask.Verify() // 待优化
+	this.wstask.Verify() // 待优化
 	PlayerTaskMgr_GetMe().Add(this)
 	RoomMgr_GetMe().GetRoom(this)
 }
@@ -71,7 +70,7 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 			glog.Error("[WS] Endian Trans Fail")
 			return false
 		}
-		this.playerInfo.id = id
+		//this.playerInfo.id = id
 
 		var token *common.Token
 		token, err = common.DecryptTokenSSL(string(data[8:]))
@@ -79,11 +78,11 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 			glog.Error("[room] decrypt openssl token fail ", err)
 			return false
 		}
-		glog.Info("[room] decrypt openssl token ", token.Id, token.Time)
+		glog.Info("[room] decrypt openssl token ", token.Id, token.Time, time.Now().Unix())
 
-		if time.Now().Unix()-token.Time < 30 {
+		/*if time.Now().Unix()-token.Time < 30 {
 			this.wstask.Verify()
-		}
+		}*/
 	case common.MsgType_Move:
 
 		var angle uint32
@@ -113,7 +112,7 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 	case common.MsgType_Finsh:
 		this.room.Close()
 	case common.MsgType_Heart:
-		this.wstask.AsyncSend(data, flag)
+		//this.wstask.AsyncSend(data, flag)
 	case common.MsgType_Direct:
 		var angle, power uint32
 		err := binary.Read(bytes.NewReader(data[4:8]), binary.LittleEndian, &angle)
