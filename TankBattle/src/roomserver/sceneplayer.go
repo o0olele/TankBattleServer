@@ -7,41 +7,49 @@ import (
 )
 
 type ScenePlayer struct {
-	id       uint32 //玩家id
-	self     *PlayerTask
-	scene    *Scene
-	others   map[uint32]*PlayerTask
-	curflag  map[uint32]bool
-	lastflag map[uint32]bool
+	id    uint32 //玩家id
+	self  *PlayerTask
+	scene *Scene
+	//others   map[uint32]*PlayerTask
+	curflag  map[uint32]*ScenePlayer
+	lastflag map[uint32]*ScenePlayer
 
-	next  common.Pos
-	speed float64
+	isMove bool
+	next   common.Pos
+	angle  uint32
+	speed  float64
+	drag   float64
+
+	movereq common.ReqMoveMsg
 }
 
 func NewScenePlayer(udata *PlayerTask, scene *Scene) *ScenePlayer {
 	s := &ScenePlayer{
-		id:       udata.playerInfo.id,
-		scene:    scene,
-		self:     udata,
-		others:   make(map[uint32]*PlayerTask),
-		curflag:  make(map[uint32]bool),
-		lastflag: make(map[uint32]bool),
+		id:    udata.playerInfo.id,
+		scene: scene,
+		self:  udata,
+		//others:   make(map[uint32]*PlayerTask),
+		curflag:  make(map[uint32]*ScenePlayer),
+		lastflag: make(map[uint32]*ScenePlayer),
 		speed:    1,
+		drag:     0.1,
 	}
 	s.self.playerInfo = udata.playerInfo
 	return s
 }
 
-func (this *ScenePlayer) CaculateNext(direct uint32) {
+func (this *ScenePlayer) CaculateNext(direct uint32, power uint32) {
+	this.speed = float64(power)
 	this.next.X = this.self.playerInfo.pos.X + math.Sin(float64(direct)*math.Pi/180)*this.speed
 	this.next.Y = this.self.playerInfo.pos.Y + math.Cos(float64(direct)*math.Pi/180)*this.speed
+	this.UpdateSpeed(this.speed)
 }
 
-func (this *ScenePlayer) UpdateSelfPos(direct uint32) {
+// func (this *ScenePlayer) UpdateSelfPos(direct uint32) {
 
-	this.CaculateNext(direct)
-	this.self.playerInfo.pos = this.next
-}
+// 	this.CaculateNext(direct)
+// 	this.self.playerInfo.pos = this.next
+// }
 
 //发射子弹
 func (this *ScenePlayer) addBullet(direct uint32) {
@@ -115,7 +123,11 @@ func (this *ScenePlayer) addBullet(direct uint32) {
 // }
 
 func (this *ScenePlayer) UpdateSpeed(s float64) {
-	this.speed = s
+	this.speed = math.Max(0, this.speed-this.drag)
+	if math.Abs(this.speed) < 1e-5 {
+		this.isMove = false
+	}
+	//this.
 }
 
 //更新视野
@@ -127,11 +139,19 @@ func (this *ScenePlayer) UpdatePos() {
 		}
 		if math.Abs(user.self.playerInfo.pos.X-this.self.playerInfo.pos.X) < common.SceneHeight/2 &&
 			math.Abs(user.self.playerInfo.pos.Y-this.self.playerInfo.pos.Y) < common.SceneWidth/2 {
-			this.curflag[user.id] = true
-			this.others[user.id] = user.self
+			this.curflag[user.id] = user
+			//this.others[user.id] = user.self
 			//fmt.Println("add others", this.self.playerInfo.id, this.others[user.id].playerInfo)
 		}
 	}
+}
+
+//处理自己的移动
+func (this *ScenePlayer) DoMove() {
+	this.movereq.Power = 1
+	this.CaculateNext(this.movereq.Direct, this.movereq.Power)
+	this.self.playerInfo.pos = this.next
+	this.isMove = true
 }
 
 func (this *ScenePlayer) sendSceneMsg() {
@@ -141,48 +161,46 @@ func (this *ScenePlayer) sendSceneMsg() {
 		Move:    []common.Move{},
 		Bullets: []common.RetBullet{},
 	}
-	// fmt.Println("------", this.self.playerInfo.id, "------")
-	// fmt.Println("this.lastflag", this.lastflag)
-	// fmt.Println("this.curflag", this.curflag)
-	// for k, v := range this.others {
-	// 	fmt.Println("others", k, v.playerInfo)
-	// }
+	fmt.Println("--------", this.id, "---------")
+	for k, v := range this.lastflag {
+		fmt.Println(k, v.self.playerInfo.pos)
+	}
+	for k, v := range this.curflag {
+		fmt.Println(k, v.self.playerInfo.pos)
+	}
 	for id := range this.lastflag {
 		//上一次存在，这次不存在，remove
-
 		if _, ok := this.curflag[id]; !ok {
 
 			fmt.Println("remove")
 			msg.ReMove = append(msg.ReMove, common.ReMove{
 				Userid: id,
 			})
-		} else { //上一次不存在，这次存在，move
-
+		} else { //上一次存在，这次存在，move
 			fmt.Println("move")
-			msg.Move = append(msg.Move, common.Move{
-				Userid: id,
-				Pos:    this.others[id].playerInfo.pos,
-				HP:     this.others[id].playerInfo.HP,
-			})
+			if this.curflag[id].isMove {
+				msg.Move = append(msg.Move, common.Move{
+					Userid: id,
+					Pos:    this.curflag[id].self.playerInfo.pos,
+					HP:     this.curflag[id].self.playerInfo.HP,
+				})
+			}
+
 		}
 	}
 
 	for id := range this.curflag {
 		//这次存在，上一次不存在,add
 		if _, ok := this.lastflag[id]; !ok {
-			fmt.Println("add", this.self.playerInfo.id, id)
-			fmt.Println(this.others[id].playerInfo)
+			fmt.Println("add")
 			msg.Add = append(msg.Add, common.Add{
 				Userid: id,
-				Pos:    this.others[id].playerInfo.pos,
-				HP:     this.others[id].playerInfo.HP,
+				Pos:    this.curflag[id].self.playerInfo.pos,
+				HP:     this.curflag[id].self.playerInfo.HP,
 			})
 		}
 	}
 	this.lastflag = this.curflag
-	this.curflag = make(map[uint32]bool)
-	this.others = make(map[uint32]*PlayerTask)
-	//fmt.Println("------", this.self.playerInfo.id, "------")
-
+	this.curflag = make(map[uint32]*ScenePlayer)
 	this.self.SendSceneMsg(msg)
 }

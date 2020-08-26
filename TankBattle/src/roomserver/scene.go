@@ -2,7 +2,6 @@ package main
 
 import (
 	common "common"
-	"sync/atomic"
 
 	"github.com/golang/glog"
 )
@@ -10,7 +9,6 @@ import (
 type Scene struct {
 	players map[uint32]*ScenePlayer
 	room    *Room
-	hasMove uint32
 
 	//self      common.Stat // 自身当前坐标
 	//next      common.Stat // 使用next坐标进行计算，便于丢弃
@@ -19,7 +17,6 @@ type Scene struct {
 	//outters   []uint32      // 不再视野内玩家id
 	//hasMove   bool          // 标识是否移动，用于后续优化（游戏开始时发送所有玩家列表，游戏中发送移动的玩家信息）
 
-	speed       float64
 	bullets     []*common.RetBullet
 	scenePlayer map[uint32]*ScenePlayer
 }
@@ -59,39 +56,37 @@ func (this *Scene) AddPlayer(player *ScenePlayer) {
 
 //定时发送
 func (this *Scene) sendRoomMsg() {
+
 	for _, p := range this.players {
 		p.sendSceneMsg()
 	}
-	//这里发送retsencemsg，染色
-	// for _, p := range this.players {
-	// 	//p.SendSceneMsg()
-	// }
 }
 
 func (this *Scene) UpdateOP(op *opMsg) {
 	switch op.op {
 	case common.PlayerMove:
-		atomic.StoreUint32(&this.hasMove, this.hasMove+1)
 		req, ok := op.args.(common.ReqMoveMsg)
 		if !ok {
 			glog.Info("[Move] move arg error")
+			return
 		}
-		this.players[req.Userid].UpdateSelfPos(req.Direct)
-	case common.PlayerTure:
+		this.players[req.Userid].movereq = req
+		//this.players[req.Userid].UpdateSelfPos(req.Direct)
+		// angle = xxx  speed = power
+	case common.PlayerTurn:
 		req, ok := op.args.(common.ReqMoveMsg)
 		if !ok {
 			glog.Info("[Turn] turn arg error")
+			return
 		}
 		this.players[req.Userid].self.playerInfo.pos.Ag = req.Direct
 	}
 }
 
 func (this *Scene) UpdatePos() {
-	if this.hasMove == 0 {
-		return
-	}
 	for _, p := range this.players {
+		p.DoMove()
 		p.UpdatePos()
 	}
-	atomic.StoreUint32(&this.hasMove, this.hasMove-1)
+	//p.UpdatePos();
 }

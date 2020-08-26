@@ -113,7 +113,6 @@ func (this *Room) GameLoop() {
 		case <-timeTicker.C:
 			if this.timeloop%2 == 0 { //0.02s
 				this.update()
-
 			}
 			if this.timeloop%10 == 0 { //0.1s
 				this.scene.sendRoomMsg()
