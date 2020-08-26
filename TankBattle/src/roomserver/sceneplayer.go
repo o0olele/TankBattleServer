@@ -45,25 +45,18 @@ func (this *ScenePlayer) CaculateNext(direct uint32, power uint32) {
 	this.UpdateSpeed(this.speed)
 }
 
-// func (this *ScenePlayer) UpdateSelfPos(direct uint32) {
-
-// 	this.CaculateNext(direct)
-// 	this.self.playerInfo.pos = this.next
+// //发射子弹
+// func (this *ScenePlayer) addBullet(direct uint32) {
+// 	initpos := this.self.playerInfo.pos
+// 	this.room.allbullet.Store(this.room.bulletcount, &common.Bullet{
+// 		Id:     this.room.bulletcount,
+// 		Btype:  this.self.Id,
+// 		Pos:    initpos,
+// 		Direct: direct,
+// 		Time:   time.Now().Unix(),
+// 	})
+// 	atomic.StoreUint32(&this.room.bulletcount, this.room.bulletcount+1)
 // }
-
-//发射子弹
-func (this *ScenePlayer) addBullet(direct uint32) {
-	// initpos := this.pos
-	// initpos.Id = this.self.Id
-	// this.room.allbullet.Store(this.room.bulletcount, &common.Bullet{
-	// 	Id:     this.room.bulletcount,
-	// 	Btype:  this.self.Id,
-	// 	Pos:    initpos,
-	// 	Direct: direct,
-	// 	Time:   time.Now().Unix(),
-	// })
-	// atomic.StoreUint32(&this.room.bulletcount, this.room.bulletcount+1)
-}
 
 // func updateBulletPos(bullet *common.Bullet, players map[uint32]*PlayerTask) {
 // 	angle := bullet.Direct
@@ -148,13 +141,13 @@ func (this *ScenePlayer) UpdatePos() {
 
 //处理自己的移动
 func (this *ScenePlayer) DoMove() {
-	this.movereq.Power = 1
 	this.CaculateNext(this.movereq.Direct, this.movereq.Power)
 	this.self.playerInfo.pos = this.next
 	this.isMove = true
 }
 
 func (this *ScenePlayer) sendSceneMsg() {
+	this.UpdatePos()
 	msg := &common.RetSceneMsg{
 		Add:     []common.Add{},
 		ReMove:  []common.ReMove{},
@@ -162,6 +155,11 @@ func (this *ScenePlayer) sendSceneMsg() {
 		Bullets: []common.RetBullet{},
 	}
 	fmt.Println("--------", this.id, "---------")
+	msg.Move = append(msg.Move, common.Move{
+		Userid: this.id,
+		Pos:    this.self.playerInfo.pos,
+		HP:     this.self.playerInfo.HP,
+	})
 	for k, v := range this.lastflag {
 		fmt.Println(k, v.self.playerInfo.pos)
 	}
@@ -176,7 +174,7 @@ func (this *ScenePlayer) sendSceneMsg() {
 			msg.ReMove = append(msg.ReMove, common.ReMove{
 				Userid: id,
 			})
-		} else { //上一次存在，这次存在，move
+		} else { //上一次存在，这次存在，move(移动)
 			fmt.Println("move")
 			if this.curflag[id].isMove {
 				msg.Move = append(msg.Move, common.Move{
