@@ -161,9 +161,9 @@ func (this *ScenePlayer) setIsMove() {
 }
 
 func (this *ScenePlayer) DoShoot() {
-	// if this.shootreq != nil {
-	// 	this.addBullet(this.shootreq.Direct)
-	// }
+	if this.shootreq != nil {
+		this.addBullet(this.shootreq.Direct)
+	}
 }
 func (this *ScenePlayer) DoMove() {
 
@@ -307,6 +307,9 @@ func (this *ScenePlayer) sendSceneMsg() {
 	// }
 	this.lastflag = this.curflag
 	this.curflag = make(map[uint32]*ScenePlayer)
+
+	this.lastbullet = this.curbullet
+	this.curbullet = make(map[uint32]*common.Bullet)
 	this.playerTask.SendSceneMsg(msg)
 	this.setIsMove()
 }
