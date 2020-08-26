@@ -92,5 +92,6 @@ func (this *Scene) UpdateOP(op *opMsg) {
 func (this *Scene) UpdatePos() {
 	for _, p := range this.players {
 		p.DoMove()
+		p.DoShoot()
 	}
 }

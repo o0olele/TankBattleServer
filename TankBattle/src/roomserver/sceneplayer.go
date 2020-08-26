@@ -20,6 +20,9 @@ type ScenePlayer struct {
 	speed  float64
 	drag   float64
 
+	bullets   map[uint32]*common.Bullet
+	bulletnum uint32
+
 	movereq  *common.ReqMoveMsg
 	turnreq  *common.ReqTurnMsg
 	shootreq *common.ReqShootMsg
@@ -47,37 +50,45 @@ func (this *ScenePlayer) CaculateNext(direct uint32, power uint32) {
 	this.speed = float64(power)
 	this.next.X = this.self.pos.X + math.Sin(float64(direct)*math.Pi/180)*this.speed
 	this.next.Y = this.self.pos.Y + math.Cos(float64(direct)*math.Pi/180)*this.speed
-	this.UpdateSpeed(this.speed)
+	this.UpdateSpeed()
 }
 
-//发射子弹
+// //初始化子弹
 // func (this *ScenePlayer) addBullet(direct uint32) {
 // 	initpos := this.self.pos
-// 	this.scene.bullets[this.scene.bulletnum] = &common.Bullet{
-// 		Id:     this.scene.bulletnum,
+// 	this.bullets[this.bulletnum] = &common.Bullet{
+// 		Id:     this.bulletnum,
 // 		Btype:  this.id,
 // 		Pos:    initpos,
 // 		Direct: direct,
 // 		Time:   time.Now().Unix(),
 // 	}
 
-// 	this.scene.bulletnum++
+// 	this.bulletnum = (this.bulletnum + 1) % 10000
 // }
 
-// func (this *ScenePlayer) updateBulletPos(bullet *common.Bullet) {
-// 	angle := bullet.Direct
-// 	last := *bullet
-// 	bullet.Pos.X += math.Sin(float64(angle)*math.Pi/180) * common.BulletSpeed
-// 	bullet.Pos.Y += math.Cos(float64(angle)*math.Pi/180) * common.BulletSpeed
-// 	for _, player := range players {
-// 		if player.scene == nil {
-// 			return
+// func (this *ScenePlayer) updateBulletPos() {
+// 	for _, p := range this.scene.players {
+// 		if p.id == this.id {
+// 			continue
 // 		}
-// 		if player.scene.self.HP > 0 && beshoot(&last, bullet, player) {
-// 			player.scene.self.HP--
-// 			bullet.Time += common.BulletLife
+// 		for _, bullet := range p.bullets {
+// 			if math.Abs(bullet.Pos.X-this.self.X) < common.SceneHeight/2 &&
+// 			math.Abs(bullet.Pos.Y-this.self.Y) < common.SceneWidth/2 {
+// 			this.bullets = append(this.bullets, &common.RetBullet{Pos: bullet.Pos, Id: bullet.Id})
+
+// 			angle := bullet.Direct
+// 			last := *bullet
+// 			bullet.Pos.X += math.Sin(float64(angle)*math.Pi/180) * common.BulletSpeed
+// 			bullet.Pos.Y += math.Cos(float64(angle)*math.Pi/180) * common.BulletSpeed
+// 			if this.self.HP > 0 && this.beshoot(&last, bullet) {
+// 				this.self.HP--
+// 				bullet.Time += common.BulletLife
+// 			}
+
 // 		}
 // 	}
+
 // }
 
 // func (this *ScenePlayer) beshoot(last, next *common.Bullet) bool {
@@ -87,7 +98,7 @@ func (this *ScenePlayer) CaculateNext(direct uint32, power uint32) {
 // 	ndot := common.Dot{X: next.Pos.X, Y: next.Pos.Y}
 // 	ldot := common.Dot{X: last.Pos.X, Y: last.Pos.Y}
 
-// 	pdot := common.Dot{X: player.self.X, Y: player.self.Y}
+// 	pdot := common.Dot{X: this.self.pos.X, Y: this.self.pos.Y}
 // 	if common.GetDDDistance(ndot, pdot) < common.PlayerSize {
 // 		return true
 // 	}
@@ -100,7 +111,7 @@ func (this *ScenePlayer) CaculateNext(direct uint32, power uint32) {
 // 	return false
 // }
 
-//获取视野内的子弹
+// //获取视野内的子弹
 // func (this *ScenePlayer) getBullet() {
 // 	this.bullets = []*common.RetBullet{}
 
@@ -121,12 +132,8 @@ func (this *ScenePlayer) CaculateNext(direct uint32, power uint32) {
 // 	})
 // }
 
-func (this *ScenePlayer) UpdateSpeed(s float64) {
+func (this *ScenePlayer) UpdateSpeed() {
 	this.speed = math.Max(0, this.speed-this.drag)
-	if math.Abs(this.speed) < 1e-5 {
-		this.isMove = false
-	}
-	//this.
 }
 
 //更新视野
@@ -139,12 +146,21 @@ func (this *ScenePlayer) UpdatePos() {
 		if math.Abs(user.self.pos.X-this.self.pos.X) < common.SceneHeight/2 &&
 			math.Abs(user.self.pos.Y-this.self.pos.Y) < common.SceneWidth/2 {
 			this.curflag[user.id] = user
-			//this.others[user.id] = user.self
-			//fmt.Println("add others", this.self.playerInfo.id, this.others[user.id].playerInfo)
 		}
 	}
 }
 
+func (this *ScenePlayer) setIsMove() {
+	if math.Abs(this.speed) < 1e-5 {
+		this.isMove = false
+	}
+}
+
+func (this *ScenePlayer) DoShoot() {
+	// if this.shootreq != nil {
+	// 	this.addBullet(this.shootreq.Direct)
+	// }
+}
 func (this *ScenePlayer) DoMove() {
 
 	if this.movereq != nil {
@@ -162,6 +178,7 @@ func (this *ScenePlayer) DoMove() {
 
 func (this *ScenePlayer) sendSceneMsg() {
 	this.UpdatePos()
+	//this.getBullet()
 	msg := &common.RetSceneMsg{
 		Add:     []common.Add{},
 		ReMove:  []common.ReMove{},
@@ -174,12 +191,12 @@ func (this *ScenePlayer) sendSceneMsg() {
 		Pos:    this.self.pos,
 		HP:     this.self.HP,
 	})
-	for k, v := range this.lastflag {
-		fmt.Println(k, v.self.pos)
-	}
-	for k, v := range this.curflag {
-		fmt.Println(k, v.self.pos)
-	}
+	// for k, v := range this.lastflag {
+	// 	fmt.Println(k, v.self.pos)
+	// }
+	// for k, v := range this.curflag {
+	// 	fmt.Println(k, v.self.pos)
+	// }
 	for id := range this.lastflag {
 		//上一次存在，这次不存在，remove
 		if _, ok := this.curflag[id]; !ok {
@@ -215,5 +232,5 @@ func (this *ScenePlayer) sendSceneMsg() {
 	this.lastflag = this.curflag
 	this.curflag = make(map[uint32]*ScenePlayer)
 	this.playerTask.SendSceneMsg(msg)
-	this.isMove = false
+	this.setIsMove()
 }
