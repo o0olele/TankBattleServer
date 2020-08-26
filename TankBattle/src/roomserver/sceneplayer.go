@@ -41,10 +41,13 @@ func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
 		},
 		playerTask: player,
 		//others:   make(map[uint32]*PlayerTask),
-		curflag:  make(map[uint32]*ScenePlayer),
-		lastflag: make(map[uint32]*ScenePlayer),
-		speed:    1,
-		drag:     0.1,
+		curflag:    make(map[uint32]*ScenePlayer),
+		lastflag:   make(map[uint32]*ScenePlayer),
+		speed:      1,
+		drag:       0.1,
+		bullets:    make(map[uint32]*common.Bullet),
+		lastbullet: make(map[uint32]*common.Bullet),
+		curbullet:  make(map[uint32]*common.Bullet),
 	}
 	return s
 }
@@ -73,24 +76,24 @@ func (this *ScenePlayer) addBullet(direct uint32) {
 //更新视野内子弹并判断是否击中自己
 func (this *ScenePlayer) getBullet() {
 	for _, p := range this.scene.players {
-		if p.id == this.id {
-			continue
-		}
 		for _, bullet := range p.bullets {
 			if time.Now().Unix()-int64(bullet.Time) > common.BulletLife {
 				delete(p.bullets, bullet.Id)
+				continue
 			}
 			if math.Abs(bullet.Pos.X-this.self.pos.X) < common.SceneHeight/2 &&
 				math.Abs(bullet.Pos.Y-this.self.pos.Y) < common.SceneWidth/2 {
-				this.curbullet[bullet.Id] = bullet
 				angle := bullet.Direct
 				last := *bullet
 				bullet.Pos.X += math.Sin(float64(angle)*math.Pi/180) * common.BulletSpeed
 				bullet.Pos.Y += math.Cos(float64(angle)*math.Pi/180) * common.BulletSpeed
-				if this.self.HP > 0 && this.beshoot(&last, bullet) {
+				if this.self.HP >= 0 && this.beshoot(&last, bullet) {
 					this.self.HP--
 					bullet.Time += common.BulletLife
+					delete(p.bullets, bullet.Id)
+					continue
 				}
+				this.curbullet[bullet.Id] = bullet
 			}
 
 		}
@@ -115,6 +118,7 @@ func (this *ScenePlayer) beshoot(last, next *common.Bullet) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -163,6 +167,7 @@ func (this *ScenePlayer) setIsMove() {
 func (this *ScenePlayer) DoShoot() {
 	if this.shootreq != nil {
 		this.addBullet(this.shootreq.Direct)
+		this.shootreq = nil
 	}
 }
 func (this *ScenePlayer) DoMove() {
@@ -198,10 +203,12 @@ func aoi(last, cur map[uint32]bool) (add []uint32, remove []uint32, move []uint3
 
 func (this *ScenePlayer) getMoveMsg(msg *common.RetSceneMsg) {
 	var last, cur map[uint32]bool
+	last = make(map[uint32]bool)
+	cur = make(map[uint32]bool)
 	for id := range this.lastflag {
 		last[id] = true
 	}
-	for id := range this.lastflag {
+	for id := range this.curflag {
 		cur[id] = true
 	}
 	add, remove, move := aoi(last, cur)
@@ -213,11 +220,13 @@ func (this *ScenePlayer) getMoveMsg(msg *common.RetSceneMsg) {
 		})
 	}
 	for _, id := range move {
-		msg.Move = append(msg.Move, common.Move{
-			Userid: id,
-			Pos:    this.curflag[id].self.pos,
-			HP:     this.curflag[id].self.HP,
-		})
+		if this.curflag[id].isMove {
+			msg.Move = append(msg.Move, common.Move{
+				Userid: id,
+				Pos:    this.curflag[id].self.pos,
+				HP:     this.curflag[id].self.HP,
+			})
+		}
 	}
 	for _, id := range remove {
 		msg.ReMove = append(msg.ReMove, common.ReMove{
@@ -227,6 +236,8 @@ func (this *ScenePlayer) getMoveMsg(msg *common.RetSceneMsg) {
 }
 func (this *ScenePlayer) getBulletMsg(msg *common.RetSceneMsg) {
 	var last, cur map[uint32]bool
+	last = make(map[uint32]bool)
+	cur = make(map[uint32]bool)
 	for id := range this.lastbullet {
 		last[id] = true
 	}
@@ -237,13 +248,13 @@ func (this *ScenePlayer) getBulletMsg(msg *common.RetSceneMsg) {
 	for _, id := range add {
 		msg.Bullets.Add = append(msg.Bullets.Add, common.RetBullet{
 			Id:  id,
-			Pos: this.curflag[id].self.pos,
+			Pos: this.curbullet[id].Pos,
 		})
 	}
 	for _, id := range move {
 		msg.Bullets.Move = append(msg.Bullets.Move, common.RetBullet{
 			Id:  id,
-			Pos: this.curflag[id].self.pos,
+			Pos: this.curbullet[id].Pos,
 		})
 	}
 	for _, id := range remove {

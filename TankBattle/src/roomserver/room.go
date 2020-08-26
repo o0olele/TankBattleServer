@@ -114,7 +114,7 @@ func (this *Room) GameLoop() {
 			if this.timeloop%2 == 0 { //0.02s
 				this.update()
 			}
-			if this.timeloop%10 == 0 { //0.1s
+			if this.timeloop%2 == 0 { //0.1s
 				this.scene.sendRoomMsg()
 			}
 			if this.timeloop%100 == 0 { //1s

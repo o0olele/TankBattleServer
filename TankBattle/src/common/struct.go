@@ -9,6 +9,7 @@ const (
 	MsgType_Shoot  MsgType = 3
 	MsgType_Heart  MsgType = 4
 	MsgType_Direct MsgType = 5
+	MsgType_Relife MsgType = 6
 )
 const (
 	PlayerMove uint32 = 1
@@ -23,7 +24,7 @@ const (
 )
 
 const (
-	BulletSpeed float64 = 0.5
+	BulletSpeed float64 = 2
 	BulletLife  int64   = 5
 )
 
@@ -32,7 +33,7 @@ const (
 )
 
 const (
-	PlayerSize float64 = 1
+	PlayerSize float64 = 5
 	FullHP     uint32  = 100
 )
 
@@ -126,4 +127,8 @@ type RetGetRoom struct {
 	Ip    string
 	Port  uint32
 	Token string
+}
+
+type RetYouDie struct {
+	Die bool
 }
