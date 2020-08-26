@@ -4,6 +4,7 @@ import (
 	common "common"
 	"fmt"
 	"math"
+	"math/rand"
 	"time"
 )
 
@@ -14,6 +15,7 @@ type ScenePlayer struct {
 	scene      *Scene
 	curflag    map[uint32]*ScenePlayer
 	lastflag   map[uint32]*ScenePlayer
+	senddie    bool
 
 	isMove bool
 	next   common.Pos
@@ -37,7 +39,7 @@ func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
 		scene: scene,
 		self: &PlayerInfo{
 			id: player.id,
-			HP: 100,
+			HP: common.FullHP,
 		},
 		playerTask: player,
 		//others:   make(map[uint32]*PlayerTask),
@@ -45,6 +47,7 @@ func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
 		lastflag:   make(map[uint32]*ScenePlayer),
 		speed:      1,
 		drag:       0.1,
+		senddie:    false,
 		bullets:    make(map[uint32]*common.Bullet),
 		lastbullet: make(map[uint32]*common.Bullet),
 		curbullet:  make(map[uint32]*common.Bullet),
@@ -87,8 +90,11 @@ func (this *ScenePlayer) getBullet() {
 				last := *bullet
 				bullet.Pos.X += math.Sin(float64(angle)*math.Pi/180) * common.BulletSpeed
 				bullet.Pos.Y += math.Cos(float64(angle)*math.Pi/180) * common.BulletSpeed
-				if this.self.HP >= 0 && this.beshoot(&last, bullet) {
+				if this.self.HP > 0 && this.beshoot(&last, bullet) {
 					this.self.HP--
+					if this.self.HP == 0 {
+						this.senddie = true
+					}
 					bullet.Time += common.BulletLife
 					delete(p.bullets, bullet.Id)
 					continue
@@ -261,9 +267,25 @@ func (this *ScenePlayer) getBulletMsg(msg *common.RetSceneMsg) {
 		msg.Bullets.ReMove = append(msg.Bullets.ReMove, id)
 	}
 }
+
+func (this *ScenePlayer) relive() {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	this.self.HP = common.FullHP
+	this.self.pos.X = float64(r.Intn(10))
+	this.self.pos.Y = float64(r.Intn(10))
+}
+
 func (this *ScenePlayer) sendSceneMsg() {
 	this.UpdatePos()
 	this.getBullet()
+	if this.senddie {
+		this.playerTask.SendDieMsg()
+		this.senddie = false
+		return
+	}
+	if !this.isMove && len(this.curbullet) == 0 && len(this.curflag) == 0 {
+		return
+	}
 	msg := &common.RetSceneMsg{
 		Add:    []common.Add{},
 		ReMove: []common.ReMove{},

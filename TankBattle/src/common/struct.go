@@ -16,6 +16,7 @@ const (
 	PlayerTurn uint32 = 2
 	AddBullet  uint32 = 3
 	BulletMove uint32 = 4
+	Relive     uint32 = 5
 )
 const (
 	SceneSpeed  float64 = 0.2
@@ -34,7 +35,7 @@ const (
 
 const (
 	PlayerSize float64 = 5
-	FullHP     uint32  = 100
+	FullHP     uint32  = 300
 )
 
 type Pos struct {

@@ -69,11 +69,17 @@ func (this *Scene) UpdateOP(op *opMsg) {
 			glog.Info("[Move] move arg error")
 			return
 		}
+		if this.players[req.Userid].self.HP == 0 {
+			return
+		}
 		this.players[req.Userid].movereq = &req
 		//this.players[req.Userid].UpdateSelfPos(req.Direct)
 		// angle = xxx  speed = power
 	case common.PlayerTurn:
 		req, ok := op.args.(common.ReqTurnMsg)
+		if this.players[req.Userid].self.HP == 0 {
+			return
+		}
 		if !ok {
 			glog.Info("[Turn] turn arg error")
 			return
@@ -81,11 +87,21 @@ func (this *Scene) UpdateOP(op *opMsg) {
 		this.players[req.Userid].turnreq = &req
 	case common.AddBullet:
 		req, ok := op.args.(common.ReqShootMsg)
+		if this.players[req.Userid].self.HP == 0 {
+			return
+		}
 		if !ok {
 			glog.Info("[shoot] shoot arg error")
 			return
 		}
 		this.players[req.Userid].shootreq = &req
+	case common.Relive:
+		id, ok := op.args.(uint32)
+		if !ok {
+			glog.Info("[relive] relive arg error")
+			return
+		}
+		this.players[id].relive()
 	}
 }
 

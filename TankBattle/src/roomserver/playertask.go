@@ -119,6 +119,8 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		this.room.opChan <- &opMsg{op: common.AddBullet, args: req}
 		//this.scene.addBullet(this.direct)
 
+	case common.MsgType_Relife:
+		this.room.opChan <- &opMsg{op: common.Relive, args: uint32(this.id)}
 	case common.MsgType_Finsh:
 		this.room.Close()
 	case common.MsgType_Heart:
@@ -152,20 +154,12 @@ func (this *PlayerTask) SendOverMsg() {
 	bytes, _ := json.Marshal(common.RetOverMsg{End: true})
 	this.wstask.AsyncSend(bytes, 0)
 }
-
+func (this *PlayerTask) SendDieMsg() {
+	bytes, _ := json.Marshal(common.RetYouDie{Die: true})
+	this.wstask.AsyncSend(bytes, 0)
+}
 func (this *PlayerTask) SendSceneMsg(msg *common.RetSceneMsg) bool {
-	// if nil == this.scene {
-	// 	return false
-	// }
-
-	// msg := this.scene.SceneMsg()
-	// if nil == msg {
-	// 	glog.Error("[Scene] Msg Nil")
-	// 	return false
-	// }
-
 	buf, _ := json.Marshal(*msg)
-	//fmt.Println(string(buf))
 	return this.wstask.AsyncSend(buf, 0)
 }
 
