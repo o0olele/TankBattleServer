@@ -40,6 +40,7 @@ func GenerateRandMap() *map[uint32]*common.Obstacle {
 	obstacle := make(map[uint32]*common.Obstacle)
 	for i := 0; i < 3; i++ {
 		o := NewRandObstacle()
+		o.Id = uint32(i)
 		obstacle[uint32(i)] = o
 	}
 	return &obstacle
