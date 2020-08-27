@@ -13,12 +13,14 @@ func getrand(limit uint32) uint32 {
 
 func NewRandObstacle() *common.Obstacle {
 	pos := common.Pos{
-		X: float64(getrand(uint32(common.MapHeight / 2))),
-		Y: float64(getrand(uint32(common.MapWidth / 2))),
+		X: float64(getrand(uint32(common.MapWidth / 2))),
+		Y: float64(getrand(uint32(common.MapHeight / 2))),
 	}
 	return &common.Obstacle{
 		Pos:    pos,
 		Height: 1,
+		Length: 1,
+		Width:  1,
 	}
 }
 
