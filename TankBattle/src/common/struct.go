@@ -20,8 +20,8 @@ const (
 )
 const (
 	SceneSpeed  float64 = 0.2
-	SceneWidth  float64 = 20
-	SceneHeight float64 = 20
+	SceneWidth  float64 = 200
+	SceneHeight float64 = 200
 )
 
 const (
@@ -34,8 +34,8 @@ const (
 )
 
 const (
-	PlayerSize float64 = 5
-	FullHP     uint32  = 300
+	PlayerSize float64 = 3
+	FullHP     uint32  = 100
 )
 
 const (
