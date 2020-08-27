@@ -28,12 +28,15 @@ type ScenePlayer struct {
 	curbullet  map[uint32]*common.Bullet
 	lastbullet map[uint32]*common.Bullet
 
+	curobstacle  map[uint32]*common.Obstacle
+	lastobstacle map[uint32]*common.Obstacle
+
 	movereq  *common.ReqMoveMsg
 	turnreq  *common.ReqTurnMsg
 	shootreq *common.ReqShootMsg
 }
 
-func NewScenePlayer(player *PlayerTask, scene *Scene, mp *map[uint32]common.Obstacle) *ScenePlayer {
+func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
 	s := &ScenePlayer{
 		id:    player.id,
 		scene: scene,
@@ -52,8 +55,6 @@ func NewScenePlayer(player *PlayerTask, scene *Scene, mp *map[uint32]common.Obst
 		lastbullet: make(map[uint32]*common.Bullet),
 		curbullet:  make(map[uint32]*common.Bullet),
 	}
-
-	s.playerTask.SendMap(&common.RetObstacle{Obstacles: *mp})
 	return s
 }
 
@@ -130,26 +131,17 @@ func (this *ScenePlayer) beshoot(last, next *common.Bullet) bool {
 	return false
 }
 
-//获取视野内的子弹
-// func (this *ScenePlayer) getBullet() {
-// 	this.bullets = []*common.RetBullet{}
-
-// 	this.room.allbullet.Range(func(key, value interface{}) bool {
-// 		bullet, ok := value.(*common.Bullet)
-// 		if !ok {
-// 			return false
-// 		}
-
-// 		if math.Abs(bullet.Pos.X-this.self.X) < common.SceneHeight/2 &&
-// 			math.Abs(bullet.Pos.Y-this.self.Y) < common.SceneWidth/2 {
-// 			this.bullets = append(this.bullets, &common.RetBullet{Pos: bullet.Pos, Id: bullet.Id})
-// 		}
-// 		return true
-// 	})
-// }
-
 func (this *ScenePlayer) UpdateSpeed() {
 	this.speed = math.Max(0, this.speed-this.drag)
+}
+
+func (this *ScenePlayer) getObstacle() {
+	for _, obstacle := range *this.scene.Obstacle {
+		if math.Abs(obstacle.Pos.X-this.self.pos.X) < common.SceneHeight/2 &&
+			math.Abs(obstacle.Pos.Y-this.self.pos.Y) < common.SceneWidth/2 {
+			this.curobstacle[obstacle.Id] = obstacle
+		}
+	}
 }
 
 //更新视野
@@ -241,6 +233,8 @@ func (this *ScenePlayer) getMoveMsg(msg *common.RetSceneMsg) {
 			Userid: id,
 		})
 	}
+	this.lastflag = this.curflag
+	this.curflag = make(map[uint32]*ScenePlayer)
 }
 func (this *ScenePlayer) getBulletMsg(msg *common.RetSceneMsg) {
 	var last, cur map[uint32]bool
@@ -268,8 +262,30 @@ func (this *ScenePlayer) getBulletMsg(msg *common.RetSceneMsg) {
 	for _, id := range remove {
 		msg.Bullets.ReMove = append(msg.Bullets.ReMove, id)
 	}
+	this.lastbullet = this.curbullet
+	this.curbullet = make(map[uint32]*common.Bullet)
 }
+func (this *ScenePlayer) getObstacleMsg(msg *common.RetSceneMsg) {
+	var last, cur map[uint32]bool
+	last = make(map[uint32]bool)
+	cur = make(map[uint32]bool)
+	for id := range this.lastobstacle {
+		last[id] = true
+	}
+	for id := range this.curobstacle {
+		cur[id] = true
+	}
+	add, remove, _ := aoi(last, cur)
+	for _, id := range add {
+		msg.Obstacles.Add = append(msg.Obstacles.Add, *this.curobstacle[id])
+	}
+	for _, id := range remove {
+		msg.Obstacles.ReMove = append(msg.Obstacles.ReMove, id)
+	}
 
+	this.lastobstacle = this.curobstacle
+	this.curobstacle = make(map[uint32]*common.Obstacle)
+}
 func (this *ScenePlayer) relive() {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	this.self.HP = common.FullHP
@@ -280,6 +296,7 @@ func (this *ScenePlayer) relive() {
 func (this *ScenePlayer) sendSceneMsg() {
 	this.UpdatePos()
 	this.getBullet()
+	this.getObstacle()
 	if this.senddie {
 		this.playerTask.SendDieMsg()
 		this.senddie = false
@@ -301,50 +318,8 @@ func (this *ScenePlayer) sendSceneMsg() {
 	})
 	this.getMoveMsg(msg)
 	this.getBulletMsg(msg)
-	// for k, v := range this.lastflag {
-	// 	fmt.Println(k, v.self.pos)
-	// }
-	// for k, v := range this.curflag {
-	// 	fmt.Println(k, v.self.pos)
-	// }
+	this.getObstacleMsg(msg)
 
-	// for id := range this.lastflag {
-	// 	//上一次存在，这次不存在，remove
-	// 	if _, ok := this.curflag[id]; !ok {
-
-	// 		fmt.Println("remove")
-	// 		msg.ReMove = append(msg.ReMove, common.ReMove{
-	// 			Userid: id,
-	// 		})
-	// 	} else { //上一次存在，这次存在，move(移动)
-	// 		fmt.Println("move")
-	// 		if this.curflag[id].isMove {
-	// 			msg.Move = append(msg.Move, common.Move{
-	// 				Userid: id,
-	// 				Pos:    this.curflag[id].self.pos,
-	// 				HP:     this.curflag[id].self.HP,
-	// 			})
-	// 		}
-
-	// 	}
-	// }
-
-	// for id := range this.curflag {
-	// 	//这次存在，上一次不存在,add
-	// 	if _, ok := this.lastflag[id]; !ok {
-	// 		fmt.Println("add")
-	// 		msg.Add = append(msg.Add, common.Add{
-	// 			Userid: id,
-	// 			Pos:    this.curflag[id].self.pos,
-	// 			HP:     this.curflag[id].self.HP,
-	// 		})
-	// 	}
-	// }
-	this.lastflag = this.curflag
-	this.curflag = make(map[uint32]*ScenePlayer)
-
-	this.lastbullet = this.curbullet
-	this.curbullet = make(map[uint32]*common.Bullet)
 	this.playerTask.SendSceneMsg(msg)
 	this.setIsMove()
 }

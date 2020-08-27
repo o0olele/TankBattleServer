@@ -7,9 +7,9 @@ import (
 )
 
 type Scene struct {
-	players map[uint32]*ScenePlayer
-	room    *Room
-
+	players  map[uint32]*ScenePlayer
+	room     *Room
+	Obstacle *map[uint32]*common.Obstacle
 	//self      common.Stat // 自身当前坐标
 	//next      common.Stat // 使用next坐标进行计算，便于丢弃
 	//selfMutex sync.Mutex
@@ -23,9 +23,9 @@ type Scene struct {
 func (this *Scene) Init(room *Room) {
 	this.room = room
 	this.players = make(map[uint32]*ScenePlayer)
-	mp := GenerateRandMap()
+	this.Obstacle = GenerateRandMap()
 	for _, p := range this.room.players {
-		this.players[p.id] = NewScenePlayer(p, this, mp)
+		this.players[p.id] = NewScenePlayer(p, this)
 	}
 }
 

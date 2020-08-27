@@ -38,6 +38,11 @@ const (
 	FullHP     uint32  = 300
 )
 
+const (
+	MapHeight uint32 = 10
+	MapWidth  uint32 = 10
+)
+
 type Pos struct {
 	X  float64
 	Y  float64
@@ -101,10 +106,11 @@ type RetGetIDMsg struct {
 }
 
 type RetSceneMsg struct {
-	Move    []Move
-	ReMove  []ReMove
-	Add     []Add
-	Bullets RetBulletMsg
+	Move      []Move
+	ReMove    []ReMove
+	Add       []Add
+	Bullets   RetBulletMsg
+	Obstacles RetObstacle
 }
 
 type RetTimeMsg struct {
@@ -135,6 +141,7 @@ type RetYouDie struct {
 }
 
 type Obstacle struct {
+	Id     uint32
 	Pos    Pos
 	Length uint32
 	Width  uint32
@@ -142,5 +149,6 @@ type Obstacle struct {
 }
 
 type RetObstacle struct {
-	Obstacles map[uint32]Obstacle
+	ReMove []uint32
+	Add    []Obstacle
 }
