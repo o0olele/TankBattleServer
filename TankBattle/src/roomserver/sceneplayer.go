@@ -37,12 +37,18 @@ type ScenePlayer struct {
 }
 
 func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	s := &ScenePlayer{
 		id:    player.id,
 		scene: scene,
 		self: &PlayerInfo{
 			id: player.id,
 			HP: common.FullHP,
+			pos: common.Pos{
+				X: float64(r.Intn(int(common.MapWidth))),
+				Y: float64(r.Intn(int(common.MapHeight))),
+			},
 		},
 		playerTask: player,
 		//others:   make(map[uint32]*PlayerTask),
@@ -181,10 +187,10 @@ func (this *ScenePlayer) isInMap(pos *common.Pos) bool {
 }
 
 func (this *ScenePlayer) isCollision(pos *common.Pos, ob *common.Obstacle) bool {
-	if math.Abs(ob.Pos.X-pos.X) > math.Abs(float64(ob.Width)/2+common.PlayerSize) || math.Abs(ob.Pos.Y-pos.Y) > math.Abs(float64(ob.Height)/2+common.PlayerSize) {
-		return false
+	if math.Abs(ob.Pos.X-pos.X) < math.Abs(float64(ob.Width)/2+common.PlayerSize) && math.Abs(ob.Pos.Y-pos.Y) < math.Abs(float64(ob.Height)/2+common.PlayerSize) {
+		return true
 	}
-	return true
+	return false
 }
 
 func (this *ScenePlayer) setInMap(pos *common.Pos) {
@@ -212,6 +218,9 @@ func (this *ScenePlayer) DoMove() {
 		this.CaculateNext(this.movereq.Direct, this.movereq.Power)
 		this.setInMap(&this.next)
 		for _, ob := range *this.scene.Obstacle {
+			if this.isCollision(&this.self.pos, ob) {
+				this.next.X = ob.Pos.X + float64(ob.Width) + common.PlayerSize + 0.1
+			}
 			if this.isCollision(&this.next, ob) {
 				this.next = this.self.pos
 				this.isMove = false

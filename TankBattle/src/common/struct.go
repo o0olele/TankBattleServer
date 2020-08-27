@@ -39,8 +39,8 @@ const (
 )
 
 const (
-	MapHeight uint32 = 10
-	MapWidth  uint32 = 10
+	MapHeight uint32 = 25
+	MapWidth  uint32 = 25
 )
 
 type Pos struct {
