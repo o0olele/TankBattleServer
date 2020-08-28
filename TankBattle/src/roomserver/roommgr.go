@@ -51,13 +51,22 @@ func (this *RoomMgr) GetRoom(player *PlayerTask) (*Room, error) {
 	glog.Info("[roommgr] GetRoom")
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
-	room, ok := this.unFullRoom.Front().(*Room)
-	if ok && room != nil && !room.IsAddable() {
-		this.runRoom[room.id] = room
-		this.unFullRoom.Pop()
-		ok = false
+	var room *Room
+	var ok bool
+	for {
+		room, ok = this.unFullRoom.Front().(*Room)
+		if ok && room != nil {
+			if !room.IsAddable() {
+				this.runRoom[room.id] = room
+				this.unFullRoom.Pop()
+			} else {
+				break
+			}
+		} else {
+			break
+		}
 	}
-	if !ok && room == nil {
+	if !ok {
 		fmt.Println("当前没有空房，创建新房")
 		rid := this.getNextRoomid()
 		room = NewRoom(common.CommonRoom, rid)
@@ -70,6 +79,10 @@ func (this *RoomMgr) GetRoom(player *PlayerTask) (*Room, error) {
 	}
 
 	err := room.AddPlayer(player)
+	if !room.IsAddable() {
+		this.unFullRoom.Pop()
+		this.runRoom[room.id] = room
+	}
 	if err != nil {
 		fmt.Println("为玩家分配房间失败", room, player)
 		return nil, errors.New("distribute room error")
