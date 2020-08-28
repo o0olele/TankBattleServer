@@ -402,7 +402,7 @@ func (this *ScenePlayer) sendSceneMsg() {
 	this.getMoveMsg(msg)
 	this.getBulletMsg(msg)
 	this.getObstacleMsg(msg)
-	if !this.isMove && len(msg.Add) == 0 && len(msg.Move) == 0 && len(msg.ReMove) == 0 && len(this.curbullet) == 0 {
+	if !this.isMove && len(msg.Add) == 0 && len(msg.Move) == 0 && len(msg.ReMove) == 0 && len(msg.Bullets.Move) == 0 && len(msg.Bullets.ReMove) == 0 && len(msg.Bullets.Add) == 0 {
 		return
 	}
 	this.playerTask.SendSceneMsg(msg)
