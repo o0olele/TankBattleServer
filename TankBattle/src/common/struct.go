@@ -39,7 +39,7 @@ const (
 )
 
 const (
-	MapHeight uint32 = 25
+	MapHeight uint32 = 25 //半径
 	MapWidth  uint32 = 25
 )
 
@@ -64,6 +64,8 @@ type Bullet struct {
 	Pos    Pos
 	Direct uint32
 	Time   int64
+
+	Next Pos
 }
 type Move struct {
 	Userid uint32
@@ -124,6 +126,8 @@ type RetBulletMsg struct {
 type RetBullet struct {
 	Id  uint32
 	Pos Pos
+
+	Next Pos
 }
 
 type RetOverMsg struct {

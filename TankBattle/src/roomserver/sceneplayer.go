@@ -65,8 +65,7 @@ func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
 	return s
 }
 
-func (this *ScenePlayer) CaculateNext(direct uint32, power uint32) {
-	this.speed = float64(power)
+func (this *ScenePlayer) CaculateNext(direct uint32) {
 	this.next.X = this.self.pos.X + math.Sin(float64(direct)*math.Pi/180)*this.speed
 	this.next.Y = this.self.pos.Y + math.Cos(float64(direct)*math.Pi/180)*this.speed
 	this.UpdateSpeed()
@@ -106,8 +105,14 @@ func (this *ScenePlayer) getBullet() {
 				math.Abs(bullet.Pos.Y-this.self.pos.Y) < common.SceneWidth/2 {
 				angle := bullet.Direct
 				last := *bullet
-				bullet.Pos.X += math.Sin(float64(angle)*math.Pi/180) * common.BulletSpeed
-				bullet.Pos.Y += math.Cos(float64(angle)*math.Pi/180) * common.BulletSpeed
+				deltax := math.Sin(float64(angle)*math.Pi/180) * common.BulletSpeed
+				deltay := math.Cos(float64(angle)*math.Pi/180) * common.BulletSpeed
+				bullet.Pos.X += deltax
+				bullet.Pos.Y += deltay
+
+				bullet.Next.X = bullet.Pos.X + deltax
+				bullet.Next.Y = bullet.Pos.Y + deltay
+
 				if this.bulletHitObstacle(&last, bullet) {
 					bullet.Time += common.BulletLife
 					delete(p.bullets, bullet.Id)
@@ -225,10 +230,15 @@ func (this *ScenePlayer) setInMap(pos *common.Pos) {
 
 func (this *ScenePlayer) DoMove() {
 
-	if this.movereq != nil {
+	if this.movereq != nil || this.speed > 1e-5 {
+		var direct uint32
+		if this.movereq != nil {
+			this.speed = float64(this.movereq.Power)
+			direct = this.movereq.Direct
+		}
 		this.isMove = true
 
-		this.CaculateNext(this.movereq.Direct, this.movereq.Power)
+		this.CaculateNext(direct)
 		this.setInMap(&this.next)
 		for _, ob := range *this.scene.Obstacle {
 			if this.isCollision(&this.self.pos, common.PlayerSize, ob) {
@@ -314,14 +324,16 @@ func (this *ScenePlayer) getBulletMsg(msg *common.RetSceneMsg) {
 	add, remove, move := aoi(last, cur)
 	for _, id := range add {
 		msg.Bullets.Add = append(msg.Bullets.Add, common.RetBullet{
-			Id:  id,
-			Pos: this.curbullet[id].Pos,
+			Id:   id,
+			Pos:  this.curbullet[id].Pos,
+			Next: this.curbullet[id].Next,
 		})
 	}
 	for _, id := range move {
 		msg.Bullets.Move = append(msg.Bullets.Move, common.RetBullet{
-			Id:  id,
-			Pos: this.curbullet[id].Pos,
+			Id:   id,
+			Pos:  this.curbullet[id].Pos,
+			Next: this.curbullet[id].Next,
 		})
 	}
 	for _, id := range remove {

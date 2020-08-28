@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	MaxPlayerNum uint32 = 2
+	MaxPlayerNum uint32 = 3
 )
 
 type opMsg struct {
@@ -30,6 +30,7 @@ type Room struct {
 	curnum      uint32                 //当前房间内玩家数
 	isstart     bool
 	timeloop    uint64
+	starttime   int64
 	stopch      chan bool
 	Isstop      bool
 	totgametime uint64   //in second
@@ -58,6 +59,9 @@ func (this *Room) AddPlayer(player *PlayerTask) error {
 		glog.Error("[Room] 房间已满")
 		return errors.New("room is full")
 	}
+	if !this.IsAddable() {
+		return errors.New("room is up to end")
+	}
 	this.curnum++
 	this.players[player.id] = player
 	this.players[player.id].room = this
@@ -67,14 +71,14 @@ func (this *Room) AddPlayer(player *PlayerTask) error {
 
 func NewRoom(rtype, rid uint32) *Room {
 	room := &Room{
-		id:       rid,
-		roomtype: rtype,
-		players:  make(map[uint32]*PlayerTask),
-		curnum:   0,
-		isstart:  false,
-		Isstop:   false,
-		endchan:  make(chan bool),
-		//allbullet:   make(map[uint32]*common.Bullet),
+		id:          rid,
+		roomtype:    rtype,
+		players:     make(map[uint32]*PlayerTask),
+		curnum:      0,
+		isstart:     false,
+		Isstop:      false,
+		endchan:     make(chan bool),
+		starttime:   time.Now().Unix(),
 		bulletcount: 1,
 		scene:       &Scene{},
 		opChan:      make(chan *opMsg, 500),
@@ -89,7 +93,12 @@ func (this *Room) IsFull() bool {
 	}
 	return true
 }
-
+func (this *Room) IsAddable() bool {
+	if time.Now().Unix() < this.starttime+int64(this.totgametime)/2 || !this.IsFull() {
+		return true
+	}
+	return false
+}
 func (this *Room) Start() {
 	this.isstart = true
 	this.GameLoop()
