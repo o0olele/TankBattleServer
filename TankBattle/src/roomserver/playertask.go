@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -91,12 +92,10 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		}
 		glog.Info("[WS] Parse Msg Move ", angle)
 
-		if nil == this.room {
+		if !this.CheckSelfRoom() {
 			return false
 		}
-		if this.room.Isstop {
-			return false
-		}
+
 		req := common.ReqMoveMsg{
 			Userid: this.id,
 			Direct: angle,
@@ -116,12 +115,25 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 			Userid: this.id,
 			Direct: angle,
 		}
+
+		if !this.CheckSelfRoom() {
+			return false
+		}
+
 		this.room.opChan <- &opMsg{op: common.AddBullet, args: req}
 		//this.scene.addBullet(this.direct)
 
 	case common.MsgType_Relife:
+		if !this.CheckSelfRoom() {
+			return false
+		}
+
 		this.room.opChan <- &opMsg{op: common.Relive, args: uint32(this.id)}
 	case common.MsgType_Finsh:
+		if !this.CheckSelfRoom() {
+			return false
+		}
+
 		this.room.Close()
 	case common.MsgType_Heart:
 		//this.wstask.AsyncSend(data, flag)
@@ -134,12 +146,10 @@ func (this *PlayerTask) ParseMsg(data []byte, flag byte) bool {
 		}
 		glog.Info("[WS] Parse Msg Turn ", angle)
 
-		if nil == this.room {
+		if !this.CheckSelfRoom() {
 			return false
 		}
-		if this.room.Isstop {
-			return false
-		}
+
 		req := common.ReqTurnMsg{
 			Userid: this.id,
 			Direct: angle,
@@ -165,6 +175,18 @@ func (this *PlayerTask) SendSceneMsg(msg *common.RetSceneMsg) bool {
 func (this *PlayerTask) SendMap(msg *common.RetObstacle) {
 	buf, _ := json.Marshal(*msg)
 	this.wstask.AsyncSend(buf, 0)
+}
+
+func (this *PlayerTask) CheckSelfRoom() bool {
+	if this.room == nil {
+		return false
+	}
+
+	if this.room.Isstop {
+		return false
+	}
+
+	return true
 }
 
 type PlayerTaskMgr struct {
@@ -272,4 +294,13 @@ func (this *PlayerTaskMgr) Get(id uint32) *PlayerTask {
 	}
 
 	return t
+}
+
+func (this *PlayerTask) sendTime(msg common.RetTimeMsg) {
+	jstr, ok := json.Marshal(msg)
+	if ok != nil {
+		return
+	}
+	fmt.Println(string(jstr))
+	this.wstask.AsyncSend(jstr, 0)
 }

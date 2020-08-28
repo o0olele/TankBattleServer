@@ -9,4 +9,5 @@ type PlayerInfo struct {
 	rank   uint32
 	pos    common.Pos
 	HP     uint32
+	MovDir uint32
 }

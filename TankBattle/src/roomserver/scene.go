@@ -2,6 +2,7 @@ package main
 
 import (
 	common "common"
+	"fmt"
 
 	"github.com/golang/glog"
 )
@@ -12,28 +13,46 @@ type Scene struct {
 	Obstacle *map[uint32]*common.Obstacle
 }
 
-func (this *Scene) Init(room *Room) {
-	this.room = room
-	this.players = make(map[uint32]*ScenePlayer)
-	this.Obstacle = GenerateRandMap()
-	for _, p := range this.room.players {
-		this.players[p.id] = NewScenePlayer(p, this)
+func NewScene(room *Room) *Scene {
+	scene := &Scene{
+		room:    room,
+		players: make(map[uint32]*ScenePlayer),
 	}
+
+	scene.init()
+
+	return scene
+}
+
+func (this *Scene) init() {
+	this.Obstacle = GenerateRandMap()
 }
 
 func (this *Scene) AddPlayer(p *PlayerTask) {
+	fmt.Println("add player")
 	this.players[p.id] = NewScenePlayer(p, this)
 }
 
 //定时发送
 func (this *Scene) sendRoomMsg() {
-
 	for _, p := range this.players {
 		p.sendSceneMsg()
 	}
 }
 
+func (this *Scene) SendOverMsg() {
+	for _, player := range this.players {
+		player.SendOverMsg()
+	}
+}
+
+func (this *Scene) sendTime(t uint64) {
+	for _, p := range this.players {
+		p.sendTime(t)
+	}
+}
 func (this *Scene) UpdateOP(op *opMsg) {
+	fmt.Println(op.op)
 	switch op.op {
 	case common.PlayerMove:
 		req, ok := op.args.(common.ReqMoveMsg)

@@ -2,11 +2,9 @@ package main
 
 import (
 	"base/env"
-	common "common"
-	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/golang/glog"
@@ -24,20 +22,17 @@ type opMsg struct {
 //提供信息给roommgr管理房间
 type Room struct {
 	//mutex    sync.RWMutex
-	id          uint32                 //房间id
-	roomtype    uint32                 //房间类型
-	players     map[uint32]*PlayerTask //房间内的玩家
-	curnum      uint32                 //当前房间内玩家数
+	id       uint32 //房间id
+	roomtype uint32 //房间类型
+	//players     map[uint32]*PlayerTask //房间内的玩家
+	curnum      uint32 //当前房间内玩家数
 	isstart     bool
 	timeloop    uint64
 	starttime   int64
 	stopch      chan bool
 	Isstop      bool
-	totgametime uint64   //in second
-	allbullet   sync.Map //----------
-	//allbullet   map[uint32]*common.Bullet
+	totgametime uint64 //in second
 	endchan     chan bool
-	bulletcount uint32 //--------
 
 	scene  *Scene
 	opChan chan *opMsg
@@ -50,41 +45,35 @@ type room struct {
 
 //给一个玩家分配房间（已经加入房间）
 func (this *Room) AddPlayer(player *PlayerTask) error {
-	//this.mutex.Lock()
-	if this.checkPlayer(player) {
-		//glog.Info("[Room] ", player.playerInfo.id, "玩家已经在[", this.id, "]房间里面了")
-		return nil
-	}
+
 	if this.curnum >= MaxPlayerNum {
 		glog.Error("[Room] 房间已满")
 		return errors.New("room is full")
 	}
 	if !this.IsAddable() {
+		fmt.Println("check add player error")
 		return errors.New("room is up to end")
 	}
+
+	player.room = this
 	this.curnum++
-	this.players[player.id] = player
-	this.players[player.id].room = this
 	this.scene.AddPlayer(player)
-	//this.mutex.Unlock()
 	return nil
 }
 
 func NewRoom(rtype, rid uint32) *Room {
 	room := &Room{
-		id:          rid,
-		roomtype:    rtype,
-		players:     make(map[uint32]*PlayerTask),
-		curnum:      0,
-		isstart:     false,
-		Isstop:      false,
-		endchan:     make(chan bool),
-		starttime:   time.Now().Unix(),
-		bulletcount: 1,
-		scene:       &Scene{},
-		opChan:      make(chan *opMsg, 500),
+		id:        rid,
+		roomtype:  rtype,
+		curnum:    0,
+		isstart:   false,
+		Isstop:    false,
+		endchan:   make(chan bool),
+		starttime: time.Now().Unix(),
+		opChan:    make(chan *opMsg, 500),
 	}
 	room.totgametime, _ = strconv.ParseUint(env.Get("room", "time"), 10, 64)
+	room.scene = NewScene(room)
 	return room
 }
 
@@ -95,7 +84,7 @@ func (this *Room) IsFull() bool {
 	return true
 }
 func (this *Room) IsAddable() bool {
-	if time.Now().Unix() < this.starttime+int64(this.totgametime)/2 || !this.IsFull() {
+	if time.Now().Unix() < this.starttime+int64(this.totgametime)/2 && !this.IsFull() {
 		return true
 	}
 	return false
@@ -107,7 +96,6 @@ func (this *Room) Start() {
 
 func (this *Room) GameLoop() {
 
-	this.scene.Init(this)
 	timeTicker := time.NewTicker(time.Millisecond * 10)
 	stop := false
 	for !stop {
@@ -128,7 +116,7 @@ func (this *Room) GameLoop() {
 				this.scene.sendRoomMsg()
 			}
 			if this.timeloop%100 == 0 { //1s
-				this.sendTime(this.totgametime - this.timeloop/100)
+				this.scene.sendTime(this.totgametime - this.timeloop/100)
 			}
 			if this.timeloop != 0 && this.timeloop%(this.totgametime*100) == 0 {
 				stop = true
@@ -147,51 +135,13 @@ func (this *Room) GameLoop() {
 }
 func (this *Room) Close() {
 	if !this.Isstop {
-		for _, player := range this.players {
-			player.SendOverMsg()
-		}
+		this.scene.SendOverMsg()
+
 		this.Isstop = true
 		RoomMgr_GetMe().endchan <- this.id
 	}
 }
 
-func (this *Room) checkPlayer(player *PlayerTask) bool {
-	if _, ok := this.players[player.id]; !ok {
-		return false
-	}
-	return true
-}
-
-func (this *Room) sendTime(t uint64) {
-	for _, p := range this.players {
-		t := common.RetTimeMsg{
-			Time: t,
-		}
-		jstr, err := json.Marshal(t)
-		if err != nil {
-			glog.Error("[Time] marshal jsonMsg err")
-			return
-		}
-		p.wstask.AsyncSend(jstr, 0)
-	}
-}
-
 func (this *Room) update() {
-
-	//this.scene.UpdateSpeed(common.SceneSpeed)
-
 	this.scene.UpdatePos()
-	// for _, p := range this.players {
-	// 	p.UpdateOthers()
-	// }
-
-	// this.allbullet.Range(func(k, v interface{}) bool {
-	// 	b, ok := v.(*common.Bullet)
-	// 	if !ok {
-	// 		return false
-	// 	}
-	// 	updateBulletPos(b, this.players)
-	// 	return true
-	// })
-
 }

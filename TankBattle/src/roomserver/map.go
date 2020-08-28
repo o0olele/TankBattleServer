@@ -20,7 +20,7 @@ func NewRandObstacle() *common.Obstacle {
 		Pos:    pos,
 		Height: 1,
 		Length: 1,
-		Width:  1,
+		Width:  3,
 	}
 }
 

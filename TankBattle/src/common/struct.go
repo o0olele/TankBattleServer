@@ -25,7 +25,7 @@ const (
 )
 
 const (
-	BulletSpeed float64 = 1
+	BulletSpeed float64 = 3
 	BulletLife  int64   = 5
 )
 
@@ -64,6 +64,7 @@ type Bullet struct {
 	Pos    Pos
 	Direct uint32
 	Time   int64
+	Size   float64
 
 	Next Pos
 	Delx float64

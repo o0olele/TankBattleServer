@@ -56,7 +56,7 @@ func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
 		curflag:      make(map[uint32]*ScenePlayer),
 		lastflag:     make(map[uint32]*ScenePlayer),
 		speed:        0,
-		drag:         0.001,
+		drag:         0.05,
 		senddie:      false,
 		bullets:      make(map[uint32]*common.Bullet),
 		lastbullet:   make(map[uint32]*common.Bullet),
@@ -81,23 +81,25 @@ func (this *ScenePlayer) addBullet(direct uint32) {
 		Btype:  this.id,
 		Pos:    initpos,
 		Direct: direct,
+		Size:   1,
 		Time:   time.Now().Unix(),
 		Delx:   common.BulletSpeed * math.Sin(float64(direct)*math.Pi/180),
 		Dely:   common.BulletSpeed * math.Cos(float64(direct)*math.Pi/180),
 	}
-
+	this.bullets[this.bulletnum].Pos.X -= this.bullets[this.bulletnum].Delx * 5
+	this.bullets[this.bulletnum].Pos.Y -= this.bullets[this.bulletnum].Dely * 5
 	this.bulletnum = (this.bulletnum + 1) % 10000
 }
 func (this *ScenePlayer) bulletHitObstacle(last, next *common.Bullet) bool {
 	for _, ob := range *this.scene.Obstacle {
-		if this.beshoot(last, next, &ob.Pos) {
+		if this.beshoot(last, next, &ob.Pos, float64(ob.Width)) {
 			return true
 		}
 	}
 	return false
 }
 
-//更新视野内子弹并判断是否击中自己
+//更新视野内子弹并判断是否击中
 func (this *ScenePlayer) getBullet() {
 	for _, p := range this.scene.players {
 		for _, bullet := range p.bullets {
@@ -110,12 +112,14 @@ func (this *ScenePlayer) getBullet() {
 				//angle := bullet.Direct
 				last := *bullet
 
-				if this.bulletHitObstacle(&last, bullet) {
-					bullet.Time += common.BulletLife
-					delete(p.bullets, bullet.Id)
-					continue
-				}
-				if this.self.HP > 0 && this.beshoot(&last, bullet, &this.self.pos) {
+				// if this.bulletHitObstacle(&last, bullet) {
+				// 	bullet.Time += common.BulletLife
+				// 	delete(p.bullets, bullet.Id)
+				// 	continue
+				// } else {
+				// 	fmt.Println("no shoot ob")
+				// }
+				if this.self.HP > 0 && this.beshoot(&last, bullet, &this.self.pos, common.PlayerSize) && bullet.Btype != this.self.id {
 					this.self.HP--
 					if this.self.HP == 0 {
 						this.senddie = true
@@ -132,19 +136,18 @@ func (this *ScenePlayer) getBullet() {
 
 }
 
-func (this *ScenePlayer) beshoot(last, next *common.Bullet, pos *common.Pos) bool {
-	if last.Btype == this.id {
-		return false
-	}
+func (this *ScenePlayer) beshoot(last, next *common.Bullet, pos *common.Pos, size float64) bool {
+
 	ndot := common.Dot{X: next.Pos.X, Y: next.Pos.Y}
 	ldot := common.Dot{X: last.Pos.X, Y: last.Pos.Y}
 
 	pdot := common.Dot{X: pos.X, Y: pos.Y}
-	if common.GetDDDistance(ndot, pdot) < common.PlayerSize {
+	if common.GetDDDistance(ndot, pdot) < size {
 		return true
 	}
+
 	line := common.GetLine(ldot, ndot)
-	if common.GetDLDistance(line, pdot) < common.PlayerSize {
+	if common.GetDLDistance(line, pdot) < size {
 		if common.TriCos(ldot, pdot, ndot) > 0 && common.TriCos(ndot, pdot, ldot) > 0 {
 			return true
 		}
@@ -191,14 +194,21 @@ func (this *ScenePlayer) DoShoot() {
 		this.addBullet(this.shootreq.Direct)
 		this.shootreq = nil
 	}
-	for _, bullet := range this.bullets {
-
-		bullet.Pos.X += bullet.Delx
-		bullet.Pos.Y += bullet.Dely
-
-		bullet.Next.X = bullet.Pos.X + bullet.Delx
-		bullet.Next.Y = bullet.Pos.Y + bullet.Dely
+	for _, player := range this.scene.players {
+		for _, bullet := range this.bullets {
+			bulletnext := bullet
+			bulletnext.Pos.X += bullet.Delx
+			bulletnext.Pos.Y += bullet.Dely
+			if this.bulletHitObstacle(bullet, bulletnext) {
+				delete(player.bullets, bullet.Id)
+				continue
+			}
+			bullet = bulletnext
+			bullet.Next.X = bullet.Pos.X + bullet.Delx
+			bullet.Next.Y = bullet.Pos.Y + bullet.Dely
+		}
 	}
+
 }
 
 func (this *ScenePlayer) isInMap(pos *common.Pos) bool {
@@ -236,14 +246,12 @@ func (this *ScenePlayer) setInMap(pos *common.Pos) {
 func (this *ScenePlayer) DoMove() {
 
 	if this.movereq != nil || this.speed > 1e-5 {
-		var direct uint32
 		if this.movereq != nil {
 			this.speed = float64(this.movereq.Power)
-			direct = this.movereq.Direct
+			this.self.MovDir = this.movereq.Direct
 		}
 		this.isMove = true
-
-		this.CaculateNext(direct)
+		this.CaculateNext(this.self.MovDir)
 		this.setInMap(&this.next)
 		for _, ob := range *this.scene.Obstacle {
 			if this.isCollision(&this.self.pos, common.PlayerSize, ob) {
@@ -403,9 +411,20 @@ func (this *ScenePlayer) sendSceneMsg() {
 	this.getBulletMsg(msg)
 	this.getObstacleMsg(msg)
 	if !this.isMove && len(msg.Add) == 0 && len(msg.Move) == 0 && len(msg.ReMove) == 0 &&
-		len(msg.Bullets.Add) == 0 && len(msg.Bullets.Move) == 0 && len(msg.Bullets.ReMove) == 0 {
+		len(msg.Bullets.Add) == 0 && len(msg.Bullets.Move) == 0 && len(msg.Bullets.ReMove) == 0 &&
+		len(msg.Obstacles.Add) == 0 && len(msg.Obstacles.ReMove) == 0 {
 		return
 	}
 	this.playerTask.SendSceneMsg(msg)
 	this.setIsMove()
+}
+
+func (this *ScenePlayer) sendTime(t uint64) {
+	ret := common.RetTimeMsg{
+		Time: t,
+	}
+	this.playerTask.sendTime(ret)
+}
+func (this *ScenePlayer) SendOverMsg() {
+	this.playerTask.SendOverMsg()
 }
