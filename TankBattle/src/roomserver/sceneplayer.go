@@ -26,6 +26,8 @@ type ScenePlayer struct {
 	bulletnum  uint32
 	curbullet  map[uint32]*common.Bullet
 	lastbullet map[uint32]*common.Bullet
+	buldeltax  float64
+	buldeltay  float64
 
 	curobstacle  map[uint32]*common.Obstacle
 	lastobstacle map[uint32]*common.Obstacle
@@ -80,6 +82,8 @@ func (this *ScenePlayer) addBullet(direct uint32) {
 		Pos:    initpos,
 		Direct: direct,
 		Time:   time.Now().Unix(),
+		Delx:   common.BulletSpeed * math.Sin(float64(direct)*math.Pi/180),
+		Dely:   common.BulletSpeed * math.Cos(float64(direct)*math.Pi/180),
 	}
 
 	this.bulletnum = (this.bulletnum + 1) % 10000
@@ -103,15 +107,8 @@ func (this *ScenePlayer) getBullet() {
 			}
 			if math.Abs(bullet.Pos.X-this.self.pos.X) < common.SceneHeight/2 &&
 				math.Abs(bullet.Pos.Y-this.self.pos.Y) < common.SceneWidth/2 {
-				angle := bullet.Direct
+				//angle := bullet.Direct
 				last := *bullet
-				deltax := math.Sin(float64(angle)*math.Pi/180) * common.BulletSpeed
-				deltay := math.Cos(float64(angle)*math.Pi/180) * common.BulletSpeed
-				bullet.Pos.X += deltax
-				bullet.Pos.Y += deltay
-
-				bullet.Next.X = bullet.Pos.X + deltax
-				bullet.Next.Y = bullet.Pos.Y + deltay
 
 				if this.bulletHitObstacle(&last, bullet) {
 					bullet.Time += common.BulletLife
@@ -193,6 +190,14 @@ func (this *ScenePlayer) DoShoot() {
 	if this.shootreq != nil {
 		this.addBullet(this.shootreq.Direct)
 		this.shootreq = nil
+	}
+	for _, bullet := range this.bullets {
+
+		bullet.Pos.X += bullet.Delx
+		bullet.Pos.Y += bullet.Dely
+
+		bullet.Next.X = bullet.Pos.X + bullet.Delx
+		bullet.Next.Y = bullet.Pos.Y + bullet.Dely
 	}
 }
 

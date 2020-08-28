@@ -25,7 +25,7 @@ const (
 )
 
 const (
-	BulletSpeed float64 = 2
+	BulletSpeed float64 = 1
 	BulletLife  int64   = 5
 )
 
@@ -66,6 +66,8 @@ type Bullet struct {
 	Time   int64
 
 	Next Pos
+	Delx float64
+	Dely float64
 }
 type Move struct {
 	Userid uint32
