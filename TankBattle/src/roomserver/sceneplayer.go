@@ -86,8 +86,8 @@ func (this *ScenePlayer) addBullet(direct uint32) {
 		Delx:   common.BulletSpeed * math.Sin(float64(direct)*math.Pi/180),
 		Dely:   common.BulletSpeed * math.Cos(float64(direct)*math.Pi/180),
 	}
-	this.bullets[this.bulletnum].Pos.X -= this.bullets[this.bulletnum].Delx * 5
-	this.bullets[this.bulletnum].Pos.Y -= this.bullets[this.bulletnum].Dely * 5
+	this.bullets[this.bulletnum].Pos.X -= this.bullets[this.bulletnum].Delx
+	this.bullets[this.bulletnum].Pos.Y -= this.bullets[this.bulletnum].Dely
 	this.bulletnum = (this.bulletnum + 1) % 10000
 }
 func (this *ScenePlayer) bulletHitObstacle(last, next *common.Bullet) bool {
