@@ -194,19 +194,17 @@ func (this *ScenePlayer) DoShoot() {
 		this.addBullet(this.shootreq.Direct)
 		this.shootreq = nil
 	}
-	for _, player := range this.scene.players {
-		for _, bullet := range this.bullets {
-			bulletnext := bullet
-			bulletnext.Pos.X += bullet.Delx
-			bulletnext.Pos.Y += bullet.Dely
-			if this.bulletHitObstacle(bullet, bulletnext) {
-				delete(player.bullets, bullet.Id)
-				continue
-			}
-			bullet = bulletnext
-			bullet.Next.X = bullet.Pos.X + bullet.Delx
-			bullet.Next.Y = bullet.Pos.Y + bullet.Dely
+	for _, bullet := range this.bullets {
+		bulletnext := bullet
+		bulletnext.Pos.X += bullet.Delx
+		bulletnext.Pos.Y += bullet.Dely
+		if this.bulletHitObstacle(bullet, bulletnext) {
+			delete(this.bullets, bullet.Id)
+			continue
 		}
+		bullet = bulletnext
+		bullet.Next.X = bullet.Pos.X + bullet.Delx
+		bullet.Next.Y = bullet.Pos.Y + bullet.Dely
 	}
 
 }

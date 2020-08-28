@@ -127,8 +127,6 @@ func (this *Room) GameLoop() {
 			}
 		case op := <-this.opChan:
 			this.scene.UpdateOP(op)
-		default:
-
 		}
 	}
 	this.Close()
