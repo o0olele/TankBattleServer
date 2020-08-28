@@ -65,6 +65,7 @@ func (this *Room) AddPlayer(player *PlayerTask) error {
 	this.curnum++
 	this.players[player.id] = player
 	this.players[player.id].room = this
+	this.scene.AddPlayer(player)
 	//this.mutex.Unlock()
 	return nil
 }

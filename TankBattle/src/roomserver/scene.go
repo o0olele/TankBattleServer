@@ -21,8 +21,8 @@ func (this *Scene) Init(room *Room) {
 	}
 }
 
-func (this *Scene) AddPlayer(player *ScenePlayer) {
-	this.players[player.id] = player
+func (this *Scene) AddPlayer(p *PlayerTask) {
+	this.players[p.id] = NewScenePlayer(p, this)
 }
 
 //定时发送
