@@ -54,7 +54,7 @@ func NewScenePlayer(player *PlayerTask, scene *Scene) *ScenePlayer {
 		curflag:      make(map[uint32]*ScenePlayer),
 		lastflag:     make(map[uint32]*ScenePlayer),
 		speed:        0,
-		drag:         0.05,
+		drag:         0.001,
 		senddie:      false,
 		bullets:      make(map[uint32]*common.Bullet),
 		lastbullet:   make(map[uint32]*common.Bullet),
@@ -227,6 +227,7 @@ func (this *ScenePlayer) DoMove() {
 
 	if this.movereq != nil {
 		this.isMove = true
+
 		this.CaculateNext(this.movereq.Direct, this.movereq.Power)
 		this.setInMap(&this.next)
 		for _, ob := range *this.scene.Obstacle {
