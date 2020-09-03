@@ -2,8 +2,12 @@ package main
 
 import (
 	"common"
+	"encoding/json"
+	"io/ioutil"
 	"math/rand"
 	"time"
+
+	"github.com/golang/glog"
 )
 
 func getrand(limit uint32) uint32 {
@@ -44,4 +48,32 @@ func GenerateRandMap() *map[uint32]*common.Obstacle {
 		obstacle[uint32(i)] = o
 	}
 	return &obstacle
+}
+
+type obj struct {
+	Pos []common.Pos
+}
+
+func GenerateMap() *map[uint32]*common.Obstacle {
+	file, err := ioutil.ReadFile("../../config/map.json")
+	if err != nil {
+		glog.Error("[config] Read Map file error")
+		return nil
+	}
+	var pos []common.Pos
+	err = json.Unmarshal(file, &pos)
+	if err != nil {
+		glog.Error("[config] UnMarshal Map file error")
+	}
+	ret := make(map[uint32]*common.Obstacle)
+	for i, p := range pos {
+		ret[uint32(i)] = &common.Obstacle{
+			Id:     uint32(i),
+			Pos:    p,
+			Height: 1,
+			Width:  1,
+			Length: 1,
+		}
+	}
+	return &ret
 }
